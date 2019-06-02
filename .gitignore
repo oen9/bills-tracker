@@ -1,2 +1,10 @@
 *.class
 *.log
+
+.metals/
+.bloop/
+.idea/
+target/
+node_modules/
+package-lock.json
+todo

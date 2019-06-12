@@ -1,32 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html class="h-100" lang="en">
 <head>
     <title>Bills tracker</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
 
-    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
-
-    <!--[if lte IE 8]>
-        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-old-ie-min.css">
-        <link rel="stylesheet" href="front-res/css/marketing-old-ie.css">
-    <![endif]-->
-    <!--[if gt IE 8]><!-->
-        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
-        <link rel="stylesheet" href="front-res/css/marketing.css">
-    <!--<![endif]-->
-
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+    <link href="front-res/css/style.css" rel="stylesheet">
 </head>
-<body style="margin: 0px">
+<body class="h-100">
+<div id="preloader">
+    <div class="loader">
+        <svg class="circular" viewBox="25 25 50 50">
+            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="3" stroke-miterlimit="10" />
+        </svg>
+    </div>
+</div>
 
-<div id="main">
+<div id="main" class="h-100">
 </div>
 
 <script type="text/javascript" src="/billstracker-opt.js"></script>
 <script type="text/javascript" src="/billstracker-jsdeps.min.js"></script>
+
+<script src="front-res/plugins/common/common.min.js"></script>
+<script src="front-res/js/custom.min.js"></script>
+<script src="front-res/js/settings.js"></script>
+<script src="front-res/js/gleek.js"></script>
+<script src="front-res/js/styleSwitcher.js"></script>
 <script>
-  BillsTrackerApp.main(document.getElementById('main'));
+    BillsTrackerApp.main(document.getElementById('main'));
 </script>
 </body>
 </html>

@@ -2,14 +2,14 @@ package oen.billstracker.modules
 
 import diode.react.ModelProxy
 import oen.billstracker.components.BlueButton
-import oen.billstracker.services.{Clicks, IncreaseClicks}
+import oen.billstracker.services.WebData.{Clicks, IncreaseClicks}
 import oen.billstracker.shared.HelloShared
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
 object Home {
 
-  case class Props(proxy: ModelProxy[Clicks])
+  case class Props(proxy: ModelProxy[Option[Clicks]])
 
   class Backend($: BackendScope[Props, Unit]) {
     def tick(): Callback = $.props.flatMap(_.proxy.dispatchCB(IncreaseClicks))
@@ -22,7 +22,7 @@ object Home {
         <.div(^.cls := "content",
           <.div(^.cls := "l-box pure-g is-center",
             <.div(^.cls := "l-box pure-u-1 pure-u-md-1-2", BlueButton(BlueButton.Props("click me!!", tick()))),
-            <.div(^.cls := "l-box pure-u-1 pure-u-md-1-2", " clicks: " + props.proxy.value.count)
+            <.div(^.cls := "l-box pure-u-1 pure-u-md-1-2", " clicks: " + props.proxy().fold(0)(_.count))
           )
         )
       )
@@ -32,5 +32,5 @@ object Home {
     .renderBackend[Backend]
     .build
 
-  def apply(proxy: ModelProxy[Clicks]) = component(Props(proxy))
+  def apply(proxy: ModelProxy[Option[Clicks]]) = component(Props(proxy))
 }

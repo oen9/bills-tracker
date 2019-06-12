@@ -1,23 +1,30 @@
 package oen.billstracker.services
 
-import diode.{Action, ActionHandler, Circuit, ModelRW}
+import diode.{ActionHandler, Circuit, ModelRW}
 import diode.react.ReactConnector
+import WebData._
+import handlers._
 
-case class Clicks(count: Int)
-case class RootModel(clicks: Clicks)
-
-case object IncreaseClicks extends Action
-
-class ClicksHandler[M](modelRW: ModelRW[M, Clicks]) extends ActionHandler(modelRW) {
+class ClicksHandler[M](modelRW: ModelRW[M, Option[Clicks]]) extends ActionHandler(modelRW) {
   override def handle = {
-    case IncreaseClicks => updated(value.copy(count = value.count + 1))
+    case IncreaseClicks =>
+      val newValue = value.fold(Option.empty[Clicks])(c => Some(c.copy(c.count + 1))) // TODO cats
+      updated(newValue)
   }
 }
 
 object AppCircuit extends Circuit[RootModel] with ReactConnector[RootModel] {
-  override protected def initialModel: RootModel = RootModel(Clicks(0))
+  override protected def initialModel: RootModel = RootModel()
 
   override protected def actionHandler: AppCircuit.HandlerFunction = composeHandlers(
-    new ClicksHandler(zoomTo(_.clicks))
+    new ClicksHandler(zoomMapRW(_.me)(_.clicks)((root, optClick) => { // TODO lenses?
+      val updMe = for {
+        me <- root.me
+        clicks <- optClick
+      } yield me.copy(clicks = clicks)
+      root.copy(me = updMe)
+    })),
+    new GenericSignHandler(zoomTo(_.me)),
+    new SignUpHandler(zoomTo(_.signModel.signUpResult))
   )
 }

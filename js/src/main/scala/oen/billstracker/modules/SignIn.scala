@@ -40,35 +40,34 @@ object SignIn {
     }
 
     def render(props: Props, state: State) =
-      <.div(^.cls := "login-form-bg h-100",
-        <.div(^.cls := "container h-100",
-          <.div(^.cls := "row justify-content-center h-100",
-            <.div(^.cls := "col-xl-6",
-              <.div(^.cls := "form-input-content",
-                <.div(^.cls := "card login-form mb-0",
-                  <.div(^.cls := "card-body pt-5",
-                    props.router.link(HomeLoc)(^.cls := "text-center", <.h4("bills-tracker")),
+      <.div(^.cls := "container",
+        <.div(^.cls := "row justify-content-center",
+          <.div(^.cls := "col-xl-6",
+            <.div(^.cls := "card",
+              <.div(^.cls := "card-header",
+                props.router.link(HomeLoc)(^.cls := "text-center", <.h4("bills-tracker")),
+              ),
 
-                    <.form(^.cls := "mt-5 mb-5 login-input",
-                      <.div(^.cls := "form-group",
-                        <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Username", 
-                        ^.value := state.username, ^.onChange ==> updateUsername)
-                      ),
-                      <.div(^.cls := "form-group",
-                        <.input(^.tpe := "password", ^.cls := "form-control", ^.placeholder := "Password",
-                        ^.value := state.password, ^.onChange ==> updatePassword)
-                      ),
-                      <.button(^.cls := "btn login-form__btn submit w-100", ^.onClick ==> signIn,
-                        "Sign In",
-                      )
-                    ),
+              <.div(^.cls := "card-body",
 
-                    <.p(^.cls := "mt-5 login-form__footer", "Dont have account? ",
-                      props.router.link(SignUpLoc)(^.cls := "text-primary", "Sign Up"),
-                      " now"),
-                      state.errorMsg.fold(<.div())(msg => <.div(^.cls := "alert alert-danger animated fadeInDown", msg))
+                <.form(^.cls := "mt-4",
+                  <.div(^.cls := "form-group",
+                    <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Username", 
+                    ^.value := state.username, ^.onChange ==> updateUsername)
+                  ),
+                  <.div(^.cls := "form-group",
+                    <.input(^.tpe := "password", ^.cls := "form-control", ^.placeholder := "Password",
+                    ^.value := state.password, ^.onChange ==> updatePassword)
+                  ),
+                  <.button(^.cls := "btn btn-primary w-100", ^.onClick ==> signIn,
+                    "Sign In",
                   )
-                )
+                ),
+
+                <.p(^.cls := "mt-4", "Dont have account? ",
+                  props.router.link(SignUpLoc)("Sign Up"),
+                  " now"),
+                  state.errorMsg.fold(<.div())(msg => <.div(^.cls := "alert alert-danger", msg))
               )
             )
           )

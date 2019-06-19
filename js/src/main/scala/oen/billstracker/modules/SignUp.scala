@@ -48,40 +48,38 @@ object SignUp {
     }
 
     def render(props: Props, state: State) =
-      <.div(^.cls := "login-form-bg h-100",
-        <.div(^.cls := "container h-100",
-          <.div(^.cls := "row justify-content-center h-100",
-            <.div(^.cls := "col-xl-6",
-              <.div(^.cls := "form-input-content",
-                <.div(^.cls := "card login-form mb-0",
-                  <.div(^.cls := "card-body pt-5",
-                    props.router.link(HomeLoc)(^.cls := "text-center", <.h4("bills-tracker")),
+      <.div(^.cls := "container",
+        <.div(^.cls := "row justify-content-center",
+          <.div(^.cls := "col-xl-6",
+            <.div(^.cls := "card",
+              <.div(^.cls := "card-header",
+                props.router.link(HomeLoc)(^.cls := "text-center", <.h4("bills-tracker")),
+              ),
+              <.div(^.cls := "card-body",
 
-                    <.form(^.cls := "mt-5 mb-5 login-input",
-                      <.div(^.cls := "form-group",
-                        <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Username", 
-                        ^.value := state.username, ^.onChange ==> updateUsername)
-                      ),
-                      <.div(^.cls := "form-group",
-                        <.input(^.tpe := "password", ^.cls := "form-control", ^.placeholder := "Password",
-                        ^.value := state.password, ^.onChange ==> updatePassword)
-                      ),
-                      <.div(^.cls := "form-group",
-                        <.input(^.tpe := "password", ^.cls := "form-control", ^.placeholder := "Confirm password",
-                        ^.value := state.cpassword, ^.onChange ==> updateCpassword)
-                      ),
-                      <.button(^.cls := "btn login-form__btn submit w-100", ^.onClick ==> signIn,
-                        "Sign Up",
-                      )
-                    ),
-
-                    <.p(^.cls := "mt-5 login-form__footer", "Have account? ", props.router.link(SignInLoc)(^.cls := "text-primary", "Sign In"), " now"),
-                      state.errorMsg.fold(<.div())(msg => <.div(^.cls := "alert alert-danger animated fadeInDown", msg)),
-                      props.proxy().signUpResult.renderPending(_ => <.div(^.cls := "alert alert-info animated fadeInDown", "Creating account...")),
-                      props.proxy().signUpResult.renderFailed(_ => <.div(^.cls := "alert alert-error animated fadeInDown", "failed")),
-                      props.proxy().signUpResult.renderReady(msg => <.div(^.cls := "alert alert-success animated fadeInDown", msg)),
+                <.form(^.cls := "mt-4",
+                  <.div(^.cls := "form-group",
+                    <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Username", 
+                    ^.value := state.username, ^.onChange ==> updateUsername)
+                  ),
+                  <.div(^.cls := "form-group",
+                    <.input(^.tpe := "password", ^.cls := "form-control", ^.placeholder := "Password",
+                    ^.value := state.password, ^.onChange ==> updatePassword)
+                  ),
+                  <.div(^.cls := "form-group",
+                    <.input(^.tpe := "password", ^.cls := "form-control", ^.placeholder := "Confirm password",
+                    ^.value := state.cpassword, ^.onChange ==> updateCpassword)
+                  ),
+                  <.button(^.cls := "btn btn-primary w-100", ^.onClick ==> signIn,
+                    "Sign Up",
                   )
-                )
+                ),
+
+                <.p(^.cls := "mt-4", "Have account? ", props.router.link(SignInLoc)("Sign In"), " now"),
+                  state.errorMsg.fold(<.div())(msg => <.div(^.cls := "alert alert-danger", msg)),
+                  props.proxy().signUpResult.renderPending(_ => <.div(^.cls := "alert alert-info", "Creating account...")),
+                  props.proxy().signUpResult.renderFailed(_ => <.div(^.cls := "alert alert-error", "failed")),
+                  props.proxy().signUpResult.renderReady(msg => <.div(^.cls := "alert alert-success", msg)),
               )
             )
           )

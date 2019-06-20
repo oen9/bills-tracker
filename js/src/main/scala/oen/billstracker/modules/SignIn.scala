@@ -40,7 +40,7 @@ object SignIn {
     }
 
     def render(props: Props, state: State) =
-      <.div(^.cls := "container",
+      <.div(^.cls := "container mt-5",
         <.div(^.cls := "row justify-content-center",
           <.div(^.cls := "col-xl-6",
             <.div(^.cls := "card",

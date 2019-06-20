@@ -48,7 +48,7 @@ object SignUp {
     }
 
     def render(props: Props, state: State) =
-      <.div(^.cls := "container",
+      <.div(^.cls := "container mt-5",
         <.div(^.cls := "row justify-content-center",
           <.div(^.cls := "col-xl-6",
             <.div(^.cls := "card",
@@ -77,7 +77,13 @@ object SignUp {
 
                 <.p(^.cls := "mt-4", "Have account? ", props.router.link(SignInLoc)("Sign In"), " now"),
                   state.errorMsg.fold(<.div())(msg => <.div(^.cls := "alert alert-danger", msg)),
-                  props.proxy().signUpResult.renderPending(_ => <.div(^.cls := "alert alert-info", "Creating account...")),
+                  props.proxy().signUpResult.renderPending(_ =>
+                    <.div(^.cls := "d-flex justify-content-center",
+                      <.div(^.cls := "spinner-border text-primary", ^.role := "status",
+                        <.span(^.cls := "sr-only", "Loading...")
+                      )
+                    )
+                  ),
                   props.proxy().signUpResult.renderFailed(_ => <.div(^.cls := "alert alert-error", "failed")),
                   props.proxy().signUpResult.renderReady(msg => <.div(^.cls := "alert alert-success", msg)),
               )

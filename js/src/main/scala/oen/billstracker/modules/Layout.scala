@@ -16,29 +16,63 @@ object Layout {
     MenuItem(1, "About", AboutLoc)
   )
 
+  def nav(props: Props) =
+    <.div(^.cls := "navbar navbar-expand-md sticky-top navbar-dark bg-dark",
+      props.router.link(HomeLoc)(
+        ^.cls := "navbar-brand",
+        <.img(^.src := "front-res/img/logo-mini.png"),
+        " bills-tracker"
+      ),
+      <.button(^.cls := "navbar-toggler", ^.tpe := "button", VdomAttr("data-toggle") := "collapse", VdomAttr("data-target") := "#navbarNav", ^.aria.controls := "navbarNav", ^.aria.expanded := "false", ^.aria.label := "Toggle navigation",
+        <.span(^.cls := "navbar-toggler-icon")
+      ),
+      <.div(^.cls := "collapse navbar-collapse", ^.id := "navbarNav",
+        <.ul(^.cls := "navbar-nav mr-auto",
+          menuItems.map(item =>
+            <.li(^.key := item.idx, ^.cls := "nav-item", (^.cls := "active").when(props.resolution.page == item.location),
+              props.router.link(item.location)(^.cls := "nav-link", item.label)
+            )
+          ).toVdomArray
+        ),
+        props.router.link(SignOutLoc)(^.cls := "btn btn-secondary d-lg-inline-block", "Sign Out")
+      ),
+    )
+
+  def sidebar(props: Props) =
+        <.ul(^.cls := "list-group",
+          props.router.link(HomeLoc)(
+            ^.cls := "list-group-item list-group-item-action",
+            (^.cls := "active").when(props.resolution.page == HomeLoc),
+            <.i(^.cls := "fas fa-wallet"), <.span(^.cls := "pl-3", "List of bills")
+          ),
+          props.router.link(AboutLoc)(
+            ^.cls := "list-group-item list-group-item-action",
+            (^.cls := "active").when(props.resolution.page == AboutLoc),
+            <.i(^.cls := "fas fa-plus"), <.span(^.cls := "pl-3", "Add new")
+          )
+        )
+
+  def contentBody(props: Props) = props.resolution.render()
+
+  def footer(props: Props) =
+    <.div(^.cls := "footer bg-dark text-white d-flex justify-content-center mt-auto py-3",
+      "© 2019 oen"
+    )
+
   val component = ScalaComponent.builder[Props]("Layout")
     .render_P(props => {
       props.resolution.page match {
         case _: NoLayoutLoc => props.resolution.render()
         case _ =>
           React.Fragment(
-            <.nav(^.cls := "navbar navbar-dark bg-dark navbar-expand-lg ",
-              <.ul(^.cls := "navbar-nav",
-                menuItems.toVdomArray(i => {
-                  <.li(^.key := i.idx, ^.cls := "nav-item", (^.cls := "active").when(i.location == props.resolution.page),
-                    props.router.link(i.location)(^.cls := "nav-link", i.label)
-                  )
-                }),
-                <.li(^.cls := "nav-item", props.router.link(SignOutLoc)(^.cls := "nav-link", "Sign out")
-                )
+            nav(props),
+            <.div(^.cls := "container-fluid p-3 mb-2 flex-shrink-0",
+              <.div(^.cls := "row",
+                <.div(^.cls := "col-sm col-md-2 col-xl-2", sidebar(props)),
+                <.div(^.cls := "col-sm col-md-10 col-xl-10", ^.role := "main", contentBody(props))
               )
             ),
-            <.div(^.cls := "container",
-              props.resolution.render(),
-              <.div(^.cls := "footer l-box is-center",
-                "footer"
-              )
-            )
+            footer(props)
           )
       }
     })

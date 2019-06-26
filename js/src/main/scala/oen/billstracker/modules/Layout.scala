@@ -1,6 +1,6 @@
 package oen.billstracker.modules
 
-import oen.billstracker.BillsTrackerApp.{AboutLoc, HomeLoc, Loc, NoLayoutLoc, SignOutLoc}
+import oen.billstracker.BillsTrackerApp._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.{Resolution, RouterCtl}
 import japgolly.scalajs.react.vdom.html_<^._
@@ -43,12 +43,33 @@ object Layout {
           props.router.link(HomeLoc)(
             ^.cls := "list-group-item list-group-item-action",
             (^.cls := "active").when(props.resolution.page == HomeLoc),
-            <.i(^.cls := "fas fa-wallet"), <.span(^.cls := "pl-3", "List of bills")
+            <.i(^.cls := "fas fa-wallet"), <.span(^.cls := "pl-3", "List of bills"),
+
+          ),
+          <.li(^.cls := "list-group-item",
+            <.i(^.cls := "fas fa-list-ol"), <.span(^.cls := "pl-3", "last 10 bills groups"),
+            <.ul(^.cls := "list-group",
+              props.router.link(BillsGroupLoc("June"))(
+                ^.cls := "list-group-item list-group-item-action",
+                (^.cls := "active").when(props.resolution.page == BillsGroupLoc("June")),
+                <.i(^.cls := "fas fa-file-invoice-dollar"), <.span(^.cls := "pl-3", "June")
+              ),
+              props.router.link(BillsGroupLoc("May"))(
+                ^.cls := "list-group-item list-group-item-action",
+                (^.cls := "active").when(props.resolution.page == BillsGroupLoc("May")),
+                <.i(^.cls := "fas fa-file-invoice-dollar"), <.span(^.cls := "pl-3", "May")
+              )
+            )
+          ),
+          props.router.link(NewBillsGroupLoc)(
+            ^.cls := "list-group-item list-group-item-action",
+            (^.cls := "active").when(props.resolution.page == NewBillsGroupLoc),
+            <.i(^.cls := "fas fa-plus"), <.span(^.cls := "pl-3", "Add new bills group")
           ),
           props.router.link(AboutLoc)(
             ^.cls := "list-group-item list-group-item-action",
             (^.cls := "active").when(props.resolution.page == AboutLoc),
-            <.i(^.cls := "fas fa-plus"), <.span(^.cls := "pl-3", "Add new")
+            <.i(^.cls := "fas fa-info-circle"), <.span(^.cls := "pl-3", "About")
           )
         )
 

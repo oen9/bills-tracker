@@ -10,3 +10,7 @@ main > .container {
   padding-right: 15px;
   padding-left: 15px;
 }
+
+.card-18 {
+  max-width: 18rem;
+}

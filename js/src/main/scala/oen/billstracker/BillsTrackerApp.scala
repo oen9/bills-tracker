@@ -10,6 +10,8 @@ import japgolly.scalajs.react.CallbackTo
 import oen.billstracker.modules.SignIn
 import oen.billstracker.modules.SignOut
 import oen.billstracker.modules.SignUp
+import oen.billstracker.modules.BillsGroup
+import oen.billstracker.modules.NewBillsGroup
 
 @JSExportTopLevel("BillsTrackerApp")
 object BillsTrackerApp {
@@ -19,9 +21,11 @@ object BillsTrackerApp {
 
   case object HomeLoc extends Loc("Home")
   case object AboutLoc extends Loc("About")
+  case object NewBillsGroupLoc extends Loc("New bills group")
   case object SignInLoc extends NoLayoutLoc("Sign in")
   case object SignUpLoc extends NoLayoutLoc("Sign up")
   case object SignOutLoc extends NoLayoutLoc("Sign out")
+  case class BillsGroupLoc(id: String) extends Loc("Bills group")
 
   @JSExport
   def main(target: html.Div): Unit = {
@@ -40,13 +44,15 @@ object BillsTrackerApp {
 
       val restrictedRoutes = (emptyRule
         | staticRoute(root, HomeLoc) ~> render(homeWrapper(Home(_)))
+        | dynamicRouteCT("#bills-group" / remainingPath.caseClass[BillsGroupLoc]) ~> dynRender(_ => BillsGroup())
         | staticRoute("#about", AboutLoc) ~> render(About())
+        | staticRoute("#new-bills-group", NewBillsGroupLoc) ~> render(NewBillsGroup())
         ).addCondition(grantPrivateAccess)(_ => redirectToPage(SignInLoc)(Redirect.Push))
 
       val freeRoutes = (emptyRule
-        | staticRoute("#signOut", SignOutLoc) ~> renderR(router => meWrapper(SignOut(router, _)))
-        | staticRoute("#signIn", SignInLoc) ~> renderR(router => rootWrapper(SignIn(router, _)))
-        | staticRoute("#signUp", SignUpLoc) ~> renderR(router => signWrapper(SignUp(router, _)))
+        | staticRoute("#sign-out", SignOutLoc) ~> renderR(router => meWrapper(SignOut(router, _)))
+        | staticRoute("#sign-in", SignInLoc) ~> renderR(router => rootWrapper(SignIn(router, _)))
+        | staticRoute("#sign-up", SignUpLoc) ~> renderR(router => signWrapper(SignUp(router, _)))
         )
 
       (restrictedRoutes | freeRoutes)

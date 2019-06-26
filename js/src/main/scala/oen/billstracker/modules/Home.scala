@@ -1,9 +1,7 @@
 package oen.billstracker.modules
 
 import diode.react.ModelProxy
-import oen.billstracker.components.BlueButton
 import oen.billstracker.services.WebData.{Clicks, IncreaseClicks}
-import oen.billstracker.shared.HelloShared
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
@@ -16,13 +14,38 @@ object Home {
 
     def render(props: Props) =
       React.Fragment(
-        <.div(^.cls := "content-head is-center",
-          "Hello: " + HelloShared.TEST_STR
-        ),
-        <.div(^.cls := "content",
-          <.div(^.cls := "l-box pure-g is-center",
-            <.div(^.cls := "l-box pure-u-1 pure-u-md-1-2", BlueButton(BlueButton.Props("click me!!", tick()))),
-            <.div(^.cls := "l-box pure-u-1 pure-u-md-1-2", " clicks: " + props.proxy().fold(0)(_.count))
+        <.div(^.cls := "card-deck",
+          <.div(^.cls := "card card-18",
+            <.h5(^.cls := "card-header text-center", "June"),
+            <.div(^.cls := "card-body text-center",
+              <.div(^.cls := "row",
+                <.div(^.cls := "col text-right", "items:"),
+                <.div(^.cls := "col text-left", "19")
+              ),
+              <.div(^.cls := "row",
+                <.div(^.cls := "col text-right", "sum:"),
+                <.div(^.cls := "col text-left", "8.99")
+              ),
+            ),
+            <.div(^.cls := "card-footer text-center",
+              <.button(^.cls := "btn btn-primary", "show")
+            )
+          ),
+          <.div(^.cls := "card card-18",
+            <.h5(^.cls := "card-header text-center", "May"),
+            <.div(^.cls := "card-body text-center",
+              <.div(^.cls := "row",
+                <.div(^.cls := "col text-right", "items:"),
+                <.div(^.cls := "col text-left", "5")
+              ),
+              <.div(^.cls := "row",
+                <.div(^.cls := "col text-right", "sum:"),
+                <.div(^.cls := "col text-left", "13.67")
+              ),
+            ),
+            <.div(^.cls := "card-footer text-center",
+              <.button(^.cls := "btn btn-primary", "show")
+            )
           )
         )
       )

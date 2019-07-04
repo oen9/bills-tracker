@@ -9,6 +9,10 @@ import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.implicits._
 
 import scala.concurrent.ExecutionContext
+import oen.billstracker.endpoints.AuthEndpoints
+import oen.billstracker.services.AuthService
+import oen.billstracker.endpoints.WelcomeEndpoints
+import oen.billstracker.endpoints.UserEndpoints
 
 object App extends IOApp {
 
@@ -20,8 +24,22 @@ object App extends IOApp {
     for {
       conf <- AppConfig.read()
       blockingEc = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4))
+
+      authService = AuthService[F](conf.secret)
+
       staticEndpoints = StaticEndpoints[F](blockingEc)
-      httpApp = staticEndpoints.endpoints().orNotFound
+      authEndpoints = AuthEndpoints[F](authService)
+      welcomeEndpoints = WelcomeEndpoints[F](authEndpoints.authMiddleware)
+      userEndpoints = UserEndpoints[F](authEndpoints.authMiddleware)
+
+      httpApp =
+        (
+          staticEndpoints.endpoints
+          <+> authEndpoints.endpoints
+          <+> welcomeEndpoints.endpoints
+          <+> userEndpoints.endpoints
+        ).orNotFound
+
       exitCode <- BlazeServerBuilder[F]
         .bindHttp(conf.http.port, conf.http.host)
         .withHttpApp(httpApp)

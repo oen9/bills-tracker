@@ -9,7 +9,11 @@ lazy val sharedSettings = Seq(
   version := "0.1.0-SNAPSHOT",
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.6.8",
-    "org.typelevel" %% "cats-core" % "1.6.0"
+    "org.typelevel" %%% "cats-core" % "1.6.0",
+    "io.circe" %%% "circe-generic" % "0.11.1",
+    "io.circe" %%% "circe-literal" % "0.11.1",
+    "io.circe" %%% "circe-generic-extras" % "0.11.1",
+    "io.scalaland" %%% "chimney" % "0.3.2"
   ),
   scalacOptions ++= Seq(
     "-Xlint",
@@ -70,9 +74,9 @@ lazy val jvmSettings = Seq(
     "org.http4s" %% "http4s-dsl" % Http4sVersion,
     "org.http4s" %% "http4s-blaze-client" % Http4sVersion,
     "ch.qos.logback" % "logback-classic" % LogbackVersion,
-    "io.circe" %% "circe-generic" % "0.11.1",
-    "io.circe" %% "circe-literal" % "0.11.1",
-    "com.github.pureconfig" %% "pureconfig" % "0.11.0"
+    "com.github.pureconfig" %% "pureconfig" % "0.11.0",
+    "org.reactormonk" %% "cryptobits" % "1.3",
+    "org.mindrot" % "jbcrypt" % "0.4",
   ),
   target := baseDirectory.value / ".." / "target"
 )

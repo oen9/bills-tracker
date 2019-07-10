@@ -6,6 +6,7 @@ import japgolly.scalajs.react.extra.router.RouterCtl
 import oen.billstracker.BillsTrackerApp.{Loc, HomeLoc, SignUpLoc}
 import diode.react.ModelProxy
 import oen.billstracker.services.WebData._
+import diode.react.ReactPot._
 
 object SignIn {
   case class Props(router: RouterCtl[Loc], proxy: ModelProxy[RootModel])
@@ -17,10 +18,10 @@ object SignIn {
       for {
         p <- $.props
         s <- $.state
-        _ <- if (s.username.isEmpty() || s.password.isEmpty()) 
+        _ <- if (s.username.isEmpty() || s.password.isEmpty())
               $.modState(_.copy(errorMsg = Some("username and password required")))
-            else 
-              $.modState(_.copy(errorMsg = None)) >> p.proxy.dispatchCB(SignInA(s.username, s.password))
+            else
+              $.modState(_.copy(errorMsg = None)) >> p.proxy.dispatchCB(TrySignIn(s.username, s.password))
       } yield ()
     }
 
@@ -28,7 +29,7 @@ object SignIn {
       p <- $.props
       _ <- if (p.proxy().me.isDefined) p.router.set(HomeLoc) else Callback.empty
     } yield ()
-    
+
     def updateUsername(e: ReactEventFromInput): Callback = {
       val newValue = e.target.value
       $.modState(_.copy(username = newValue))
@@ -52,7 +53,7 @@ object SignIn {
 
                 <.form(^.cls := "mt-4",
                   <.div(^.cls := "form-group",
-                    <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Username", 
+                    <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Username",
                     ^.value := state.username, ^.onChange ==> updateUsername)
                   ),
                   <.div(^.cls := "form-group",
@@ -67,7 +68,16 @@ object SignIn {
                 <.p(^.cls := "mt-4", "Dont have account? ",
                   props.router.link(SignUpLoc)("Sign Up"),
                   " now"),
-                  state.errorMsg.fold(<.div())(msg => <.div(^.cls := "alert alert-danger", msg))
+                  state.errorMsg.fold(<.div())(msg => <.div(^.cls := "alert alert-danger", msg)),
+                  props.proxy().signModel.potResult.renderPending(_ =>
+                    <.div(^.cls := "d-flex justify-content-center",
+                      <.div(^.cls := "spinner-border text-primary", ^.role := "status",
+                        <.span(^.cls := "sr-only", "Loading...")
+                      )
+                    )
+                  ),
+                  props.proxy().signModel.potResult.renderFailed(msg => <.div(^.cls := "alert alert-danger",  msg.getMessage())),
+                  props.proxy().signModel.potResult.renderReady(msg => <.div(^.cls := "alert alert-success", s"$msg registered" )),
               )
             )
           )
@@ -79,6 +89,7 @@ object SignIn {
     .initialState(State("", "", None))
     .renderBackend[Backend]
     .componentDidUpdate(_.backend.onUpdate())
+    .componentDidMount(_.props.proxy.dispatchCB(CleanPotA))
     .build
 
   def apply(router: RouterCtl[Loc], proxy: ModelProxy[RootModel]) = component(Props(router, proxy))

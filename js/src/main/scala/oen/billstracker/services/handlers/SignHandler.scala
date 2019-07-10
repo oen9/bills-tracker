@@ -10,13 +10,13 @@ import oen.billstracker.shared.Dto.PlainUser
 
 class GenericSignHandler[M](modelRW: ModelRW[M, Option[Me]]) extends ActionHandler(modelRW) {
   override def handle = {
-    case SignInA(username, password) => println(username + " " + password); updated(Some(Me()))
+    case SignedInA(username, token) => println(s"$username signed in $token"); updated(Some(Me(username, token)))
     case SignOutA => updated(None)
     case SignedUpA(username) => println(s"Signed up: $username"); noChange
   }
 }
 
-class SignUpHandler[M](modelRW: ModelRW[M, Pot[String]]) extends ActionHandler(modelRW) {
+class SignHandler[M](modelRW: ModelRW[M, Pot[String]]) extends ActionHandler(modelRW) {
   override def handle = {
     case action: TrySignUp =>
       val data = PlainUser(action.username, action.password)
@@ -24,5 +24,15 @@ class SignUpHandler[M](modelRW: ModelRW[M, Pot[String]]) extends ActionHandler(m
 
       val onReady: PotAction[String, TrySignUp] => Action = _.potResult.fold(NoAction: Action)(SignedUpA(_))
       action.handleWith(this, updateF)(GenericHandlers.withOnReady(onReady))
+
+    case action: TrySignIn =>
+      val data = PlainUser(action.username, action.password)
+      val updateF = action.effect(AjaxClient.signIn(data))(identity)
+
+      val onReady: PotAction[String, TrySignIn] => Action = _.potResult.fold(NoAction: Action)(SignedInA(data.name, _))
+      action.handleWith(this, updateF)(GenericHandlers.withOnReady(onReady))
+
+    case CleanPotA =>
+      updated(Empty)
   }
 }

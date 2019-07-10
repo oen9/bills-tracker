@@ -20,13 +20,13 @@ trait AuthEndpoints[F[_]] extends Http4sDsl[F] {
 }
 
 class AuthEndpointsImpl[F[_] : Effect](authService: AuthService[F]) extends Http4sDsl[F] with AuthEndpoints[F] {
-  
+
   private[this] val authUser: Kleisli[F, Request[F], Either[String, DbUser]] = Kleisli({ request =>
     val token = for {
       header <- request.headers.get(CaseInsensitiveString("Authorization")).toRight("header not found")
       token <- header.value.asRight[String]
     } yield token
-    
+
     token.flatTraverse(authService.retrieveUser)
   })
 

@@ -77,15 +77,15 @@ object SignUp {
 
                 <.p(^.cls := "mt-4", "Have account? ", props.router.link(SignInLoc)("Sign In"), " now"),
                   state.errorMsg.fold(<.div())(msg => <.div(^.cls := "alert alert-danger", msg)),
-                  props.proxy().signUpResult.renderPending(_ =>
+                  props.proxy().potResult.renderPending(_ =>
                     <.div(^.cls := "d-flex justify-content-center",
                       <.div(^.cls := "spinner-border text-primary", ^.role := "status",
                         <.span(^.cls := "sr-only", "Loading...")
                       )
                     )
                   ),
-                  props.proxy().signUpResult.renderFailed(msg => <.div(^.cls := "alert alert-danger",  msg.getMessage())),
-                  props.proxy().signUpResult.renderReady(msg => <.div(^.cls := "alert alert-success", msg)),
+                  props.proxy().potResult.renderFailed(msg => <.div(^.cls := "alert alert-danger",  msg.getMessage())),
+                  props.proxy().potResult.renderReady(msg => <.div(^.cls := "alert alert-success", s"$msg registered" )),
               )
             )
           )
@@ -96,6 +96,7 @@ object SignUp {
   val component = ScalaComponent.builder[Props]("SignUp")
     .initialState(State())
     .renderBackend[Backend]
+    .componentDidMount(_.props.proxy.dispatchCB(CleanPotA))
     .build
 
   def apply(router: RouterCtl[Loc], proxy: ModelProxy[SignModel]) = component(Props(router, proxy))

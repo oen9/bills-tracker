@@ -12,7 +12,7 @@ object WebData {
   case class RootModel(me: Option[Me] = None, signModel: SignModel = SignModel())
 
   case class SignInA(username: String, password: String) extends Action
-  case class SignUpA(username: String, password: String) extends Action
+  case class SignedUpA(username: String) extends Action
   case object SignOutA extends Action
   case object IncreaseClicks extends Action // TODO remove it
 

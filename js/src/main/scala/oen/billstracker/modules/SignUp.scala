@@ -22,16 +22,16 @@ object SignUp {
       for {
         p <- $.props
         s <- $.state
-        _ <- if (s.username.isEmpty() || s.password.isEmpty() || s.cpassword.isEmpty()) 
+        _ <- if (s.username.isEmpty() || s.password.isEmpty() || s.cpassword.isEmpty())
               $.modState(_.copy(errorMsg = Some("username, password and confirm password required")))
             else if (s.password != s.cpassword)
               $.modState(_.copy(errorMsg = Some("invalid 'confirm password'")))
-            else 
+            else
               $.modState(_.copy(errorMsg = None)) >> p.proxy.dispatchCB(TrySignUp(s.username, s.password))
               // $.modState(_.copy(errorMsg = None)) >> p.proxy.dispatchCB(SignUpA(s.username, s.password))
       } yield ()
     }
-    
+
     def updateUsername(e: ReactEventFromInput): Callback = {
       val newValue = e.target.value
       $.modState(_.copy(username = newValue))
@@ -59,7 +59,7 @@ object SignUp {
 
                 <.form(^.cls := "mt-4",
                   <.div(^.cls := "form-group",
-                    <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Username", 
+                    <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Username",
                     ^.value := state.username, ^.onChange ==> updateUsername)
                   ),
                   <.div(^.cls := "form-group",
@@ -84,7 +84,7 @@ object SignUp {
                       )
                     )
                   ),
-                  props.proxy().signUpResult.renderFailed(_ => <.div(^.cls := "alert alert-error", "failed")),
+                  props.proxy().signUpResult.renderFailed(msg => <.div(^.cls := "alert alert-danger",  msg.getMessage())),
                   props.proxy().signUpResult.renderReady(msg => <.div(^.cls := "alert alert-success", msg)),
               )
             )

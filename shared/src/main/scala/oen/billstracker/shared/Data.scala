@@ -4,7 +4,7 @@ import io.circe.generic.extras.Configuration
 
 case object Dto {
   implicit val customConfig: Configuration = Configuration.default.withDefaults
-  
+
   case class User(name: String, billsGroups: IndexedSeq[BillGroup] = IndexedSeq())
   case class BillGroup(name: String, items: IndexedSeq[BillItem] = IndexedSeq())
   case class BillItem(description: String, value: BigDecimal)

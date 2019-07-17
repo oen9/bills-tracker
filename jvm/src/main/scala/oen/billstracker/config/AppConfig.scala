@@ -8,7 +8,8 @@ import pureconfig.generic.auto._
 class AppConfigException(failures: ConfigReaderFailures) extends RuntimeException(failures.toList.mkString(" "))
 
 case class Http(port: Int, host: String)
-case class AppConfig(http: Http, secret: String)
+case class Mongo(uri: String)
+case class AppConfig(http: Http, secret: String, mongo: Mongo)
 
 object AppConfig {
   def read[F[_] : Sync](): F[AppConfig] = {

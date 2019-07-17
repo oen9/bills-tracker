@@ -77,6 +77,7 @@ lazy val jvmSettings = Seq(
     "com.github.pureconfig" %% "pureconfig" % "0.11.0",
     "org.reactormonk" %% "cryptobits" % "1.3",
     "org.mindrot" % "jbcrypt" % "0.4",
+    "org.reactivemongo" %% "reactivemongo" % "0.18.1"
   ),
   target := baseDirectory.value / ".." / "target"
 )

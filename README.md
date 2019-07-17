@@ -8,8 +8,8 @@ Webapp for tracking bills.
 1. scala
 1. cats
 1. http4s
-1. reactivemongo (not yet)
-1. circe (not yet)
+1. reactivemongo
+1. circe
 1. monocle (not yet)
 
 ## frontend
@@ -18,5 +18,5 @@ Webapp for tracking bills.
 1. reactjs
 1. cats
 1. diode
-1. circe (not yet)
+1. circe
 1. bootstrap

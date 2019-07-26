@@ -6,7 +6,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 lazy val sharedSettings = Seq(
   organization := "oen",
   scalaVersion := "2.12.8", // react router doesn't work with 2.12.7
-  version := "0.1.0-SNAPSHOT",
+  version := "0.1",
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.6.8",
     "org.typelevel" %%% "cats-core" % "1.6.0",
@@ -94,7 +94,10 @@ lazy val billstrackerJS = billstracker.js
   .disablePlugins(RevolverPlugin)
 
 lazy val billstrackerJVM = billstracker.jvm
+  .enablePlugins(DockerPlugin)
   .enablePlugins(JavaAppPackaging).settings(
+  dockerExposedPorts := Seq(8080),
+  dockerBaseImage := "oracle/graalvm-ce:19.1.1",
   (resources in Compile) += (fullOptJS in(billstrackerJS, Compile)).value.data,
   (resources in Compile) += (packageMinifiedJSDependencies in(billstrackerJS, Compile)).value,
   (unmanagedResourceDirectories in Compile) += (resourceDirectory in(billstrackerJS, Compile)).value

@@ -40,7 +40,7 @@ object App extends IOApp {
         conf <- AppConfig.read()
         blockingEc = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4))
 
-        authService = AuthService[F](conf.secret)
+        authService = AuthService[F](conf.secret, mongoService)
 
         staticEndpoints = StaticEndpoints[F](blockingEc)
         authEndpoints = AuthEndpoints[F](authService)

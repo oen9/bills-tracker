@@ -5,10 +5,10 @@ import cats.implicits._
 import org.reactormonk.PrivateKey
 import org.reactormonk.CryptoBits
 import java.time.Clock
-import oen.billstracker.model.StorageData.DbUser
+import oen.billstracker.model.StorageData._
 import oen.billstracker.shared.Dto._
 import org.mindrot.jbcrypt.BCrypt
-import oen.billstracker.shared.Dto
+import cats.data.OptionT
 
 trait AuthService[F[_]] {
   def signIn(pu: PlainUser): F[Option[AuthToken]]
@@ -16,45 +16,31 @@ trait AuthService[F[_]] {
   def retrieveUser(token: String): F[Either[String, DbUser]]
 }
 
-class AuthServiceImpl[F[_] : Effect](secret: String) extends AuthService[F] {
-  var tmpUsers: IndexedSeq[DbUser] = IndexedSeq(DbUser(name = "test", password = BCrypt.hashpw("test", BCrypt.gensalt()),token = "test"))
-
+class AuthServiceImpl[F[_] : Effect](secret: String, mongoService: MongoService[F]) extends AuthService[F] {
   val key = PrivateKey(scala.io.Codec.toUTF8(secret))
   val crypto = CryptoBits(key)
   val clock = Clock.systemUTC()
 
   override def signIn(pu: PlainUser): F[Option[AuthToken]] = {
-    val result = tmpUsers
-      .filter(tu => tu.name == pu.name && BCrypt.checkpw(pu.password, tu.password))
-      .headOption
-      .map(founded => {
-        val newToken = generateToken(founded.name)
-        val index = tmpUsers.indexOf(founded)
-        val updatedUser = founded.copy(token = newToken.token)
-        tmpUsers = tmpUsers.updated(index, updatedUser)
-        newToken
-      })
-    Effect[F].pure(result)
+    val res: OptionT[F, AuthToken] = for {
+      user <- OptionT(mongoService.getUserByName(pu.name)) if BCrypt.checkpw(pu.password, user.password)
+      newToken = generateToken(user.name)
+      _ <- OptionT(mongoService.updateToken(newToken.token, user))
+    } yield newToken
+
+    res.value
   }
 
-  override def signUp(pu: Dto.PlainUser): F[ResponseCode] = {
-    val result = tmpUsers
-      .filter(_.name == pu.name)
-      .headOption
-      .fold{
-        val hashedPw = BCrypt.hashpw(pu.password, BCrypt.gensalt())
-        tmpUsers = tmpUsers :+ DbUser(name = pu.name, password = hashedPw)
-        SuccessResponse : ResponseCode
-      }(_ => ErrorResponse("User exists"))
-    Effect[F].pure(result)
-  }
+  override def signUp(pu: PlainUser): F[ResponseCode] = for {
+    _ <- Effect[F].unit
+    encryptedPu = pu.copy(password = BCrypt.hashpw(pu.password, BCrypt.gensalt()))
+    wRes <- mongoService.createUser(encryptedPu)
+    resp = wRes.fold(ErrorResponse("Can't create user. Probably user exists."): ResponseCode)(_ => SuccessResponse)
+  } yield resp
 
-  override def retrieveUser(token: String): F[Either[String, DbUser]] = {
-    tmpUsers
-      .filter(_.token == token)
-      .headOption.toRight("invalid token")
-      .traverse(Effect[F].pure)
-  }
+  override def retrieveUser(token: String): F[Either[String, DbUser]] = for {
+    user <- mongoService.getUserByToken(token)
+  } yield user.toRight("invalid token")
 
   private[this] def generateToken(s: String): AuthToken = {
     AuthToken(crypto.signToken(s, clock.millis.toString))
@@ -63,5 +49,5 @@ class AuthServiceImpl[F[_] : Effect](secret: String) extends AuthService[F] {
 }
 
 object AuthService {
-  def apply[F[_] : Effect](secret: String): AuthService[F] = new AuthServiceImpl[F](secret)
+  def apply[F[_] : Effect](secret: String, mongoService: MongoService[F]): AuthService[F] = new AuthServiceImpl[F](secret, mongoService)
 }

@@ -7,8 +7,19 @@ import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.{DefaultDB, MongoConnection, MongoDriver}
 
 import scala.concurrent.ExecutionContext
+import oen.billstracker.shared.Dto.PlainUser
+import reactivemongo.api.indexes.Index
+import reactivemongo.api.indexes.IndexType
+import reactivemongo.api.FailoverStrategy
+import reactivemongo.api.commands.WriteResult
+import reactivemongo.api.commands.UpdateWriteResult
 
 trait MongoService[F[_]] {
+  def createUser(pu: PlainUser): F[Option[WriteResult]]
+  def getUserByName(name: String): F[Option[DbUser]]
+  def getUserByToken(token: String): F[Option[DbUser]]
+
+  def updateToken(token: String, dbUser: DbUser): F[Option[UpdateWriteResult]]
 }
 
 object MongoService {
@@ -18,19 +29,21 @@ object MongoService {
     def connectToDb(driver: MongoDriver): F[DefaultDB] = for {
       uri <- Effect[F].fromTry(MongoConnection.parseURI(mongoUri))
       con <- Effect[F].fromTry(driver.connection(uri, true))
-      dn <- Effect[F].pure(uri.db.get)
-      db <- con.database(dn).toF
+      dn <- Effect[F].fromOption(uri.db, new Exception("cannot get db from uri"))
+      db <- con.database(dn, FailoverStrategy(retries = 20)).toF // (retries = 20) == 32 seconds
     } yield db
 
     def createMongoService(db: DefaultDB) = {
       val dbUsers = db.collection(USERS_COLLECTION_NAME): BSONCollection
-      MongoServiceImpl[F](dbUsers, dbEc)
+      for {
+        _ <- dbUsers.indexesManager.ensure(Index(key = Seq("name" -> IndexType.Ascending), unique = true)).toF
+      } yield MongoServiceImpl[F](dbUsers, dbEc)
     }
 
     for {
       driver <- Resource.make(Effect[F].delay(MongoDriver()))(driver => Effect[F].delay(driver.close()))
       db <- Resource.liftF(connectToDb(driver))
-      mongoService = createMongoService(db)
+      mongoService <- Resource.liftF(createMongoService(db))
     } yield mongoService
   }
 }

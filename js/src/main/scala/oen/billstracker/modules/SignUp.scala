@@ -28,7 +28,6 @@ object SignUp {
               $.modState(_.copy(errorMsg = Some("invalid 'confirm password'")))
             else
               $.modState(_.copy(errorMsg = None)) >> p.proxy.dispatchCB(TrySignUp(s.username, s.password))
-              // $.modState(_.copy(errorMsg = None)) >> p.proxy.dispatchCB(SignUpA(s.username, s.password))
       } yield ()
     }
 

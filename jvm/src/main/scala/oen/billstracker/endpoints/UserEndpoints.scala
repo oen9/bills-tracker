@@ -13,9 +13,10 @@ import io.circe.syntax._
 import io.circe.generic.auto._
 import oen.billstracker.model.StorageData._
 import io.scalaland.chimney.dsl._
+import org.log4s._
 
 class UserEndpoints[F[_] : Effect](authMiddleware: AuthMiddleware[F, DbUser]) extends Http4sDsl[F] {
-
+  private[this] implicit val logger: Logger = getLogger(getClass)
   private[this] implicit val userDecoder = jsonOf[F, User]
 
   val authedEndpoints: AuthedService[DbUser, F] = AuthedService {
@@ -25,8 +26,8 @@ class UserEndpoints[F[_] : Effect](authMiddleware: AuthMiddleware[F, DbUser]) ex
       resp <- Effect[F].delay("ok?")
       reqMsg <- authReq.req.as[User]
       _ <- Effect[F].delay {
-        println(reqMsg)
-        println(reqMsg.into[DbUser].transform)
+        logger.debug(reqMsg.toString)
+        logger.debug(reqMsg.into[DbUser].transform.toString)
       }
     } yield resp)
   }

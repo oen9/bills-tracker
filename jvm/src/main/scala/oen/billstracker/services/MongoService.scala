@@ -24,7 +24,7 @@ trait MongoService[F[_]] {
 
 object MongoService {
   def apply[F[_] : Effect](mongoUri: String)(implicit dbEc: ExecutionContext): Resource[F, MongoService[F]] = {
-    import oen.billstracker.tclass.LiftAny._
+    import oen.billstracker.utils.LiftAny._
 
     def connectToDb(driver: MongoDriver): F[DefaultDB] = for {
       uri <- Effect[F].fromTry(MongoConnection.parseURI(mongoUri))

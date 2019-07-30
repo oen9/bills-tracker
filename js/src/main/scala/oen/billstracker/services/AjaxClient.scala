@@ -28,7 +28,7 @@ object AjaxClient {
   }
 
   def onFailure: Throwable => Throwable = _ match {
-    case ex: AjaxException => AjaxClient.ErrorWithMsgException(s"${ex.xhr.statusText} ${ex.xhr.responseText}")
+    case ex: AjaxException => AjaxClient.ErrorWithMsgException(s"${ex.xhr.statusText}. ${ex.xhr.responseText}")
     case _ => AjaxClient.UnknownErrorException
   }
 

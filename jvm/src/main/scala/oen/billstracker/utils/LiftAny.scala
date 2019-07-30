@@ -1,4 +1,4 @@
-package oen.billstracker.tclass
+package oen.billstracker.utils
 
 import cats.effect.{IO, LiftIO}
 

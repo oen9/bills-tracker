@@ -9,6 +9,8 @@ import oen.billstracker.model.StorageData._
 import oen.billstracker.shared.Dto._
 import org.mindrot.jbcrypt.BCrypt
 import cats.data.OptionT
+import org.log4s.getLogger
+import org.billstracker.utils.LogsHelper
 
 trait AuthService[F[_]] {
   def signIn(pu: PlainUser): F[Option[AuthToken]]
@@ -17,6 +19,7 @@ trait AuthService[F[_]] {
 }
 
 class AuthServiceImpl[F[_] : Effect](secret: String, mongoService: MongoService[F]) extends AuthService[F] {
+  private[this] implicit val logger = getLogger(getClass)
   val key = PrivateKey(scala.io.Codec.toUTF8(secret))
   val crypto = CryptoBits(key)
   val clock = Clock.systemUTC()
@@ -42,12 +45,42 @@ class AuthServiceImpl[F[_] : Effect](secret: String, mongoService: MongoService[
     user <- mongoService.getUserByToken(token)
   } yield user.toRight("invalid token")
 
+  def initTestUser: F[Unit] = {
+    import AuthService.TEST_USER
+
+    def createTestToken(dbUser: DbUser): F[Unit] = for {
+      _ <- mongoService.updateToken(TEST_USER.password, dbUser)
+    } yield ()
+
+    def createTestUser: F[Unit] = for {
+      _ <- signUp(TEST_USER)
+      maybeTestUser <- mongoService.getUserByName(TEST_USER.name)
+      _ <- maybeTestUser.fold(LogsHelper.error("Can't create test user."))(createTestToken)
+      _ <- LogsHelper.info("Test user created.")
+    } yield ()
+
+    for {
+      _ <- Effect[F].unit
+      testUser <- mongoService.getUserByName(TEST_USER.name)
+      _ <- testUser.fold(createTestUser)(_ => LogsHelper.info("Test user exists."))
+    } yield ()
+  }
+
   private[this] def generateToken(s: String): AuthToken = {
-    AuthToken(crypto.signToken(s, clock.millis.toString))
+    import AuthService.TEST_USER
+    val tokenValue = if (s == TEST_USER.name) TEST_USER.password
+    else crypto.signToken(s, clock.millis.toString)
+    AuthToken(tokenValue)
   }
 
 }
 
 object AuthService {
-  def apply[F[_] : Effect](secret: String, mongoService: MongoService[F]): AuthService[F] = new AuthServiceImpl[F](secret, mongoService)
+  def apply[F[_] : Effect](secret: String, mongoService: MongoService[F]): F[AuthService[F]] = for {
+    _ <- Effect[F].unit
+    authService = new AuthServiceImpl[F](secret, mongoService)
+    _ <- authService.initTestUser
+  } yield authService
+
+  val TEST_USER = PlainUser("test", "test")
 }

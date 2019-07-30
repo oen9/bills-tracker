@@ -67,7 +67,7 @@ object SignIn {
 
                 <.p(^.cls := "mt-4", "Dont have account? ",
                   props.router.link(SignUpLoc)("Sign Up"),
-                  " now"),
+                  " now or sign in as ", <.b("test"), " with password ", <.b("test")),
                   state.errorMsg.fold(<.div())(msg => <.div(^.cls := "alert alert-danger", msg)),
                   props.proxy().signModel.potResult.renderPending(_ =>
                     <.div(^.cls := "d-flex justify-content-center",

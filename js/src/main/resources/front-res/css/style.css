@@ -12,5 +12,5 @@ main > .container {
 }
 
 .card-18 {
-  max-width: 18rem;
+  min-width: 18rem;
 }

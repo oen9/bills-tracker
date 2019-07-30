@@ -17,15 +17,19 @@ object Home {
         <.div(^.cls := "card-deck",
           <.div(^.cls := "card card-18",
             <.h5(^.cls := "card-header text-center", "June"),
-            <.div(^.cls := "card-body text-center",
-              <.div(^.cls := "row",
-                <.div(^.cls := "col text-right", "items:"),
-                <.div(^.cls := "col text-left", "19")
-              ),
-              <.div(^.cls := "row",
-                <.div(^.cls := "col text-right", "sum:"),
-                <.div(^.cls := "col text-left", "8.99")
-              ),
+            <.div(^.cls := "card-body",
+              <.table(^.cls := "table table-striped table-bordered",
+                <.tbody(
+                  <.tr(
+                    <.td(^.cls := "text-right", "items"),
+                    <.td("19")
+                  ),
+                  <.tr(
+                    <.td(^.cls := "text-right", "sum"),
+                    <.td("8.99")
+                  )
+                )
+              )
             ),
             <.div(^.cls := "card-footer text-center",
               <.button(^.cls := "btn btn-primary", "show")
@@ -33,15 +37,19 @@ object Home {
           ),
           <.div(^.cls := "card card-18",
             <.h5(^.cls := "card-header text-center", "May"),
-            <.div(^.cls := "card-body text-center",
-              <.div(^.cls := "row",
-                <.div(^.cls := "col text-right", "items:"),
-                <.div(^.cls := "col text-left", "5")
-              ),
-              <.div(^.cls := "row",
-                <.div(^.cls := "col text-right", "sum:"),
-                <.div(^.cls := "col text-left", "13.67")
-              ),
+            <.div(^.cls := "card-body",
+              <.table(^.cls := "table table-striped table-bordered",
+                <.tbody(
+                  <.tr(
+                    <.td(^.cls := "text-right", "items"),
+                    <.td("19")
+                  ),
+                  <.tr(
+                    <.td(^.cls := "text-right", "sum"),
+                    <.td("8.99")
+                  )
+                )
+              )
             ),
             <.div(^.cls := "card-footer text-center",
               <.button(^.cls := "btn btn-primary", "show")

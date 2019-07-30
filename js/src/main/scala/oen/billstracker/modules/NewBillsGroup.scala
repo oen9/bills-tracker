@@ -7,12 +7,18 @@ object NewBillsGroup {
   val component = ScalaComponent.builder[Unit]("NewBillsGroup")
     .renderStatic(
       <.div(^.cls := "container text-center",
-        <.form(
-          <.div(^.cls := "form-group",
-            <.label(^.`for` := "group-name", "New group name"),
-            <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Some name", ^.id := "group-name")
-          ),
-          <.button(^.cls := "btn btn-primary", "Create")
+        <.div(^.cls := "card",
+          <.form(
+            <.div(^.cls := "card-header",
+              <.label(^.`for` := "group-name", "New group name"),
+            ),
+            <.div(^.cls := "card-body",
+              <.div(^.cls := "form-group",
+                <.input(^.tpe := "text", ^.cls := "form-control", ^.placeholder := "Some name", ^.id := "group-name")
+              ),
+              <.button(^.cls := "btn btn-primary", "Create")
+            )
+          )
         )
       )
     )

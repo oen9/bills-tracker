@@ -34,7 +34,7 @@ object BillsTrackerApp {
     val emptyUser = User(name = "unknown")
     val meWrapper = AppCircuit.connect(_.me)
     val signWrapper = AppCircuit.connect(_.signModel)
-    val homeWrapper = AppCircuit.connect(_.me.map(_.clicks))
+    val homeWrapper = AppCircuit.connect(_.user.map(_.billsGroups).getOrElse(IndexedSeq()))
     val rootWrapper = AppCircuit.connect(identity(_))
     val userWrapper = AppCircuit.connect(_.user.fold(emptyUser)(identity))
 
@@ -46,7 +46,7 @@ object BillsTrackerApp {
       }
 
       val restrictedRoutes = (emptyRule
-        | staticRoute(root, HomeLoc) ~> render(homeWrapper(Home(_)))
+        | staticRoute(root, HomeLoc) ~> renderR(router => homeWrapper(Home(router, _)))
         | dynamicRouteCT("#bills-group" / remainingPath.caseClass[BillsGroupLoc]) ~> dynRender(_ => BillsGroup())
         | staticRoute("#about", AboutLoc) ~> render(About())
         | staticRoute("#new-bills-group", NewBillsGroupLoc) ~> render(NewBillsGroup())

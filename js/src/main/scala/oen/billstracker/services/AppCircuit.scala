@@ -25,6 +25,7 @@ object AppCircuit extends Circuit[RootModel] with ReactConnector[RootModel] {
       root.copy(me = updMe)
     })),
     new GenericSignHandler(zoomTo(_.me)),
-    new SignHandler(zoomTo(_.signModel.potResult))
+    new SignHandler(zoomTo(_.signModel.potResult)),
+    new UserHandler(zoomTo(_.user))
   )
 }

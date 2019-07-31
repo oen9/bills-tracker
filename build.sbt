@@ -14,7 +14,8 @@ lazy val sharedSettings = Seq(
     "io.circe" %%% "circe-literal" % "0.11.1",
     "io.circe" %%% "circe-generic-extras" % "0.11.1",
     "io.circe" %%% "circe-parser" % "0.11.1",
-    "io.scalaland" %%% "chimney" % "0.3.2"
+    "io.scalaland" %%% "chimney" % "0.3.2",
+    "com.softwaremill.quicklens" %%% "quicklens" % "1.4.12"
   ),
   scalacOptions ++= Seq(
     "-Xlint",

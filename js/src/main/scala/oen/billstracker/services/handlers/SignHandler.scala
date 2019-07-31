@@ -15,7 +15,6 @@ class GenericSignHandler[M](modelRW: ModelRW[M, Option[Me]]) extends ActionHandl
       println(s"$username signed in $token")
       val getUserData = Effect(AjaxClient.getUserData(token).map(GotUserData))
       updated(Some(Me(username, token)), getUserData)
-    case GotUserData(u) => println(u); noChange
     case SignOutA => updated(None)
     case SignedUpA(username) => println(s"Signed up: $username"); noChange
   }

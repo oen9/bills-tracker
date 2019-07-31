@@ -10,7 +10,7 @@ Webapp for tracking bills.
 1. http4s
 1. reactivemongo
 1. circe
-1. monocle (not yet)
+1. quicklens
 
 ## Frontend
 1. REST
@@ -19,6 +19,7 @@ Webapp for tracking bills.
 1. cats
 1. diode
 1. circe
+1. quicklens
 1. bootstrap
 
 # How to run

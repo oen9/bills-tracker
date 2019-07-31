@@ -4,12 +4,14 @@ import oen.billstracker.BillsTrackerApp._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.{Resolution, RouterCtl}
 import japgolly.scalajs.react.vdom.html_<^._
+import diode.react.ModelProxy
+import oen.billstracker.shared.Dto.User
 
 object Layout {
 
   case class MenuItem(idx: Int, label: String, location: Loc)
 
-  case class Props(router: RouterCtl[Loc], resolution: Resolution[Loc])
+  case class Props(router: RouterCtl[Loc], resolution: Resolution[Loc], proxy: ModelProxy[User])
 
   val menuItems = Seq(
     MenuItem(0, "Home", HomeLoc),
@@ -34,7 +36,7 @@ object Layout {
             )
           ).toVdomArray
         ),
-        <.span(^.cls := "navbar-text mr-2", "test"),
+        <.span(^.cls := "navbar-text mr-2", props.proxy().name),
         props.router.link(SignOutLoc)(^.cls := "btn btn-secondary d-lg-inline-block", "Sign Out")
       ),
     )
@@ -62,31 +64,21 @@ object Layout {
       <.div(^.cls := "list-group-item list-group-item-secondary",
         <.i(^.cls := "fas fa-list-ol"), <.span(^.cls := "pl-3", "last 5 bills groups")
       ),
-      props.router.link(BillsGroupLoc("August"))(
-        ^.cls := "list-group-item list-group-item-action",
-        (^.cls := "active").when(props.resolution.page == BillsGroupLoc("August")),
-        <.i(^.cls := "fas fa-file-invoice-dollar"), <.span(^.cls := "pl-3", "August")
-      ),
-      props.router.link(BillsGroupLoc("July"))(
-        ^.cls := "list-group-item list-group-item-action",
-        (^.cls := "active").when(props.resolution.page == BillsGroupLoc("July")),
-        <.i(^.cls := "fas fa-file-invoice-dollar"), <.span(^.cls := "pl-3", "July")
-      ),
-      props.router.link(BillsGroupLoc("June"))(
-        ^.cls := "list-group-item list-group-item-action",
-        (^.cls := "active").when(props.resolution.page == BillsGroupLoc("June")),
-        <.i(^.cls := "fas fa-file-invoice-dollar"), <.span(^.cls := "pl-3", "June")
-      ),
-      props.router.link(BillsGroupLoc("May"))(
-        ^.cls := "list-group-item list-group-item-action",
-        (^.cls := "active").when(props.resolution.page == BillsGroupLoc("May")),
-        <.i(^.cls := "fas fa-file-invoice-dollar"), <.span(^.cls := "pl-3", "May")
-      ),
-      props.router.link(BillsGroupLoc("April"))(
-        ^.cls := "list-group-item list-group-item-action",
-        (^.cls := "active").when(props.resolution.page == BillsGroupLoc("April")),
-        <.i(^.cls := "fas fa-file-invoice-dollar"), <.span(^.cls := "pl-3", "April")
-      )
+      props.proxy().billsGroups.take(5).map { billsGroup =>
+        billsGroup.id.fold(<.div(s"lack of id for ${billsGroup.name}"): VdomElement) { id =>
+          props.router.link(BillsGroupLoc(id))(
+            ^.key := id,
+            ^.cls := "list-group-item list-group-item-action",
+            (^.cls := "active").when(props.resolution.page == BillsGroupLoc(id)),
+            <.i(^.cls := "fas fa-file-invoice-dollar"), <.span(^.cls := "pl-3", billsGroup.name)
+          )
+        }
+      }.toVdomArray,
+      if (props.proxy().billsGroups.isEmpty)
+        <.div(^.cls := "list-group-item list-group-item-warning",
+          <.i(^.cls := "fas fa-exclamation"), <.span(^.cls := "pl-3", "Nothing here! Add new group")
+        )
+      else VdomArray()
     )
   )
 
@@ -116,5 +108,5 @@ object Layout {
     })
     .build
 
-  def apply(ctl: RouterCtl[Loc], resolution: Resolution[Loc]) = component(Props(ctl, resolution))
+  def apply(ctl: RouterCtl[Loc], resolution: Resolution[Loc], proxy: ModelProxy[User]) = component(Props(ctl, resolution, proxy))
 }

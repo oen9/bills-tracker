@@ -10,7 +10,7 @@ object WebData {
   case class Clicks(count: Int)
   case class Me(name: String, token: String, clicks: Clicks = Clicks(0))
   case class SignModel(potResult: Pot[String] = Empty)
-  case class RootModel(me: Option[Me] = None, signModel: SignModel = SignModel())
+  case class RootModel(me: Option[Me] = None, signModel: SignModel = SignModel(), user: Option[User] = None)
 
   case class SignedInA(username: String, token: String) extends Action
   case class SignedUpA(username: String) extends Action

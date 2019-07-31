@@ -12,6 +12,7 @@ import oen.billstracker.modules.SignOut
 import oen.billstracker.modules.SignUp
 import oen.billstracker.modules.BillsGroup
 import oen.billstracker.modules.NewBillsGroup
+import oen.billstracker.shared.Dto.User
 
 @JSExportTopLevel("BillsTrackerApp")
 object BillsTrackerApp {
@@ -30,10 +31,12 @@ object BillsTrackerApp {
   @JSExport
   def main(target: html.Div): Unit = {
 
+    val emptyUser = User(name = "unknown")
     val meWrapper = AppCircuit.connect(_.me)
     val signWrapper = AppCircuit.connect(_.signModel)
     val homeWrapper = AppCircuit.connect(_.me.map(_.clicks))
     val rootWrapper = AppCircuit.connect(identity(_))
+    val userWrapper = AppCircuit.connect(_.user.fold(emptyUser)(identity))
 
     val routerConfig = RouterConfigDsl[Loc].buildConfig { dsl =>
       import dsl._
@@ -58,7 +61,7 @@ object BillsTrackerApp {
       (restrictedRoutes | freeRoutes)
         .notFound(redirectToPage(HomeLoc)(Redirect.Replace))
         .setTitle(p => s"bills-tracker | ${p.name}")
-    }.renderWith(Layout.apply)
+    }.renderWith((ctl, resolution) => userWrapper(Layout(ctl, resolution, _)))
 
     val router = Router(BaseUrl.until_#, routerConfig)
     router().renderIntoDOM(target)

@@ -6,8 +6,8 @@ case object Dto {
   implicit val customConfig: Configuration = Configuration.default.withDefaults
 
   case class User(name: String, billsGroups: IndexedSeq[BillGroup] = IndexedSeq())
-  case class BillGroup(name: String, items: IndexedSeq[BillItem] = IndexedSeq(), id: Option[String] = None)
-  case class BillItem(description: String, value: BigDecimal, id: Option[String] = None)
+  case class BillGroup(id: Option[String] = None, name: String, items: IndexedSeq[BillItem] = IndexedSeq())
+  case class BillItem(id: Option[String] = None, description: String, value: BigDecimal)
 
   case class PlainUser(name: String = "", password: String = "")
   case class AuthToken(token: String)

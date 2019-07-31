@@ -2,11 +2,18 @@ package oen.billstracker.services.handlers
 import oen.billstracker.shared.Dto._
 import io.circe.syntax._
 import io.circe.generic.extras.auto._
+import io.circe.parser.decode
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.ext.AjaxException
+import io.circe.Decoder
+import scala.util.Try
+import org.scalajs.dom.raw.XMLHttpRequest
+import scala.util.Failure
+import scala.util.Success
 
 object AjaxClient {
   val JSON_TYPE = Map("Content-Type" -> "application/json")
+  def authHeader(token: String) = "Authorization" -> token
   def authJsonType(token: String) = JSON_TYPE + ("Authorization" -> token)
 
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,7 +31,19 @@ object AjaxClient {
       url = "/sign-in",
       data = user.asJson.noSpaces,
       headers = JSON_TYPE
-    ).transform(_.responseText, onFailure)
+    ).transform(decodeAndHandleErrors[AuthToken])
+  }
+
+  def getUserData(token: String) = {
+    Ajax.get(
+      url = "/user",
+      headers = JSON_TYPE + authHeader(token)
+    ).transform(decodeAndHandleErrors[User])
+  }
+
+  def decodeAndHandleErrors[A: Decoder](t: Try[XMLHttpRequest]): Try[A] = t match {
+    case Success(req) => decode[A](req.responseText).toTry
+    case Failure(e) => Failure(onFailure(e))
   }
 
   def onFailure: Throwable => Throwable = _ match {

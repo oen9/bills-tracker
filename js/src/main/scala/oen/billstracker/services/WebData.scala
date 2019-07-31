@@ -4,6 +4,7 @@ import diode.Action
 import diode.data.Pot
 import diode.data.Empty
 import diode.data.PotAction
+import oen.billstracker.shared.Dto.User
 
 object WebData {
   case class Clicks(count: Int)
@@ -16,6 +17,8 @@ object WebData {
   case object SignOutA extends Action
   case object CleanPotA extends Action
   case object IncreaseClicks extends Action // TODO remove it
+  case object GetUserData extends Action
+  case class GotUserData(u: User) extends Action
 
   case class TrySignUp(username: String, password: String, potResult: Pot[String] = Empty) extends PotAction[String, TrySignUp] {
     def next(newResult: Pot[String]) = copy(potResult = newResult)

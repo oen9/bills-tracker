@@ -9,10 +9,11 @@ lazy val sharedSettings = Seq(
   version := "0.1",
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.6.8",
-    "org.typelevel" %%% "cats-core" % "1.6.0",
+    "org.typelevel" %%% "cats-core" % "1.6.1",
     "io.circe" %%% "circe-generic" % "0.11.1",
     "io.circe" %%% "circe-literal" % "0.11.1",
     "io.circe" %%% "circe-generic-extras" % "0.11.1",
+    "io.circe" %%% "circe-parser" % "0.11.1",
     "io.scalaland" %%% "chimney" % "0.3.2"
   ),
   scalacOptions ++= Seq(

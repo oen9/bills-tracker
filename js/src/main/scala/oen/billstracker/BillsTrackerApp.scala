@@ -13,6 +13,7 @@ import oen.billstracker.modules.SignUp
 import oen.billstracker.modules.BillsGroup
 import oen.billstracker.modules.NewBillsGroup
 import oen.billstracker.shared.Dto.User
+import cats.implicits._
 
 @JSExportTopLevel("BillsTrackerApp")
 object BillsTrackerApp {
@@ -42,6 +43,7 @@ object BillsTrackerApp {
       val newGroupModel = AppCircuit.zoom(_.pots.newGroupResult)
       meModel.zip(newGroupModel)
     }
+    def billGroupWrapper(id: String) = AppCircuit.connect(_.user.flatMap(_.billsGroups.filter(_.id == id.some).headOption))
 
     val routerConfig = RouterConfigDsl[Loc].buildConfig { dsl =>
       import dsl._
@@ -52,7 +54,7 @@ object BillsTrackerApp {
 
       val restrictedRoutes = (emptyRule
         | staticRoute(root, HomeLoc) ~> renderR(router => homeWrapper(Home(router, _)))
-        | dynamicRouteCT("#bills-group" / remainingPath.caseClass[BillsGroupLoc]) ~> dynRender(_ => BillsGroup())
+        | dynamicRouteCT("#bills-group" / remainingPath.caseClass[BillsGroupLoc]) ~> dynRender(loc => billGroupWrapper(loc.id)(BillsGroup(_)))
         | staticRoute("#about", AboutLoc) ~> render(About())
         | staticRoute("#new-bills-group", NewBillsGroupLoc) ~> render(newGroupWrapper(NewBillsGroup(_)))
         ).addCondition(grantPrivateAccess)(_ => redirectToPage(SignInLoc)(Redirect.Push))

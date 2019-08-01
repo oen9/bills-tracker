@@ -41,12 +41,20 @@ object AjaxClient {
     ).transform(decodeAndHandleErrors[User])
   }
 
-  def decodeAndHandleErrors[A: Decoder](t: Try[XMLHttpRequest]): Try[A] = t match {
+  def addNewGroup(token: String, data: AddNewGroup) = {
+    Ajax.post(
+      url = "/groups",
+      data = data.asJson.noSpaces,
+      headers = JSON_TYPE + authHeader(token)
+    ).transform(decodeAndHandleErrors[BillGroup])
+  }
+
+  private[this] def decodeAndHandleErrors[A: Decoder](t: Try[XMLHttpRequest]): Try[A] = t match {
     case Success(req) => decode[A](req.responseText).toTry
     case Failure(e) => Failure(onFailure(e))
   }
 
-  def onFailure: Throwable => Throwable = _ match {
+  private[this] def onFailure: Throwable => Throwable = _ match {
     case ex: AjaxException => AjaxClient.ErrorWithMsgException(s"${ex.xhr.statusText}. ${ex.xhr.responseText}")
     case _ => AjaxClient.UnknownErrorException
   }

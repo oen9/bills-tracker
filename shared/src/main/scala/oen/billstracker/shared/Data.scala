@@ -6,11 +6,13 @@ case object Dto {
   implicit val customConfig: Configuration = Configuration.default.withDefaults
 
   case class User(name: String, billsGroups: IndexedSeq[BillGroup] = IndexedSeq())
-  case class BillGroup(id: Option[String] = None, name: String, items: IndexedSeq[BillItem] = IndexedSeq())
-  case class BillItem(id: Option[String] = None, description: String, value: BigDecimal)
+  case class BillGroup(name: String, id: Option[String] = None, items: IndexedSeq[BillItem] = IndexedSeq())
+  case class BillItem(description: String, id: Option[String] = None, value: BigDecimal = BigDecimal(0))
 
   case class PlainUser(name: String = "", password: String = "")
   case class AuthToken(token: String)
+
+  case class AddNewGroup(name: String)
 
   sealed trait ResponseCode
   case object SuccessResponse extends ResponseCode

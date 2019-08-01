@@ -8,7 +8,7 @@ import com.softwaremill.quicklens._
 
 class UserHandler[M](modelRW: ModelRW[M, Option[User]]) extends ActionHandler(modelRW) {
   override def handle = {
-    case GotUserData(u) =>
+    case GotUserDataA(u) =>
       val withReversedGroups = u.modify(_.billsGroups).using(_.reverse)
       updated(withReversedGroups.some)
   }

@@ -37,6 +37,11 @@ object BillsTrackerApp {
     val homeWrapper = AppCircuit.connect(_.user.map(_.billsGroups).getOrElse(IndexedSeq()))
     val rootWrapper = AppCircuit.connect(identity(_))
     val userWrapper = AppCircuit.connect(_.user.fold(emptyUser)(identity))
+    val newGroupWrapper = AppCircuit.connect {
+      val meModel = AppCircuit.zoom(_.me)
+      val newGroupModel = AppCircuit.zoom(_.pots.newGroupResult)
+      meModel.zip(newGroupModel)
+    }
 
     val routerConfig = RouterConfigDsl[Loc].buildConfig { dsl =>
       import dsl._
@@ -49,7 +54,7 @@ object BillsTrackerApp {
         | staticRoute(root, HomeLoc) ~> renderR(router => homeWrapper(Home(router, _)))
         | dynamicRouteCT("#bills-group" / remainingPath.caseClass[BillsGroupLoc]) ~> dynRender(_ => BillsGroup())
         | staticRoute("#about", AboutLoc) ~> render(About())
-        | staticRoute("#new-bills-group", NewBillsGroupLoc) ~> render(NewBillsGroup())
+        | staticRoute("#new-bills-group", NewBillsGroupLoc) ~> render(newGroupWrapper(NewBillsGroup(_)))
         ).addCondition(grantPrivateAccess)(_ => redirectToPage(SignInLoc)(Redirect.Push))
 
       val freeRoutes = (emptyRule

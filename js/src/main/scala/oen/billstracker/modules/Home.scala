@@ -35,7 +35,7 @@ object Home {
                 )
               ),
               <.div(^.cls := "card-footer text-center",
-                group.id.fold(<.div(^.cls := "btn btn-primary", ^.disabled := true, "broken group (unknown id)"): VdomElement)(id =>
+                group.id.fold(<.button(^.cls := "btn btn-primary", ^.disabled := true, "broken group (unknown id)"): VdomElement)(id =>
                   props.router.link(BillsGroupLoc(id))(^.cls := "btn btn-primary", "show")
                 )
               )

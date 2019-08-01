@@ -14,6 +14,9 @@ import oen.billstracker.services.AuthService
 import oen.billstracker.endpoints.WelcomeEndpoints
 import oen.billstracker.endpoints.UserEndpoints
 import oen.billstracker.services.MongoService
+import org.http4s.server.Router
+import oen.billstracker.endpoints.GroupsEndpoints
+import oen.billstracker.services.GroupsService
 
 object App extends IOApp {
 
@@ -41,11 +44,13 @@ object App extends IOApp {
         blockingEc = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(4))
 
         authService <- AuthService[F](conf.secret, mongoService)
+        groupsService = GroupsService[F](mongoService)
 
         staticEndpoints = StaticEndpoints[F](blockingEc)
         authEndpoints = AuthEndpoints[F](authService)
         welcomeEndpoints = WelcomeEndpoints[F](authEndpoints.authMiddleware)
         userEndpoints = UserEndpoints[F](authEndpoints.authMiddleware)
+        groupsEndpoints = GroupsEndpoints[F](authEndpoints.authMiddleware, groupsService)
 
         httpApp =
           (
@@ -53,6 +58,7 @@ object App extends IOApp {
             <+> authEndpoints.endpoints
             <+> welcomeEndpoints.endpoints
             <+> userEndpoints.endpoints
+            <+> Router("/groups" -> groupsEndpoints.endpoints)
           ).orNotFound
 
         exitCode <- BlazeServerBuilder[F]

@@ -20,6 +20,8 @@ trait MongoService[F[_]] {
   def getUserByToken(token: String): F[Option[DbUser]]
 
   def updateToken(token: String, dbUser: DbUser): F[Option[UpdateWriteResult]]
+
+  def addGroup(dbUser: DbUser, group: DbBillGroup): F[Option[UpdateWriteResult]]
 }
 
 object MongoService {

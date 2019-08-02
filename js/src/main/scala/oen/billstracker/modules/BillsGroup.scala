@@ -12,7 +12,12 @@ import scala.util.Try
 
 object BillsGroup {
   case class Props(proxy: ModelProxy[Option[BillGroup]])
-  case class State(toDelete: Option[BillItem] = None, toEdit: Option[EditedBillItem] = None)
+  case class State(
+    toDelete: Option[BillItem] = None,
+    toEdit: Option[EditedBillItem] = None,
+    groupToDelete: Option[BillGroup] = None,
+    groupNameToEdit: Option[String] = None
+  )
   case class EditedBillItem(id: Option[String], description: String, value: String)
 
   class Backend($: BackendScope[Props, State]) {
@@ -63,20 +68,22 @@ object BillsGroup {
       _ <- $.modState(_.copy(toEdit = None))
     } yield ()
 
-    def updateDescription(e: ReactEventFromInput): Callback = {
-      e.preventDefault()
-      val newValue = e.target.value
-      $.modState(_.modify(_.toEdit.each.description).setTo(newValue)) >> e.preventDefaultCB >> Callback(println("updateDescription"))
-    }
+    def updateDescription(e: ReactEventFromInput): Callback = for {
+      _ <- e.preventDefaultCB
+      newValue = e.target.value
+      _ <- $.modState(_.modify(_.toEdit.each.description).setTo(newValue))
+      _ <- Callback(println("updateDescription"))
+    } yield ()
 
-    def updateValue(e: ReactEventFromInput): Callback = {
-      e.preventDefault()
-      val newValue = e.target.value
-      Try(parseBigDecimal(newValue)).fold(
+    def updateValue(e: ReactEventFromInput): Callback = for {
+      _ <- e.preventDefaultCB
+      newValue = e.target.value
+      _ <- Try(parseBigDecimal(newValue)).fold(
         _ => Callback.empty,
         _ => $.modState(_.modify(_.toEdit.each.value).setTo(newValue))
-      ) >> e.preventDefaultCB >> Callback(println("updateValue"))
-    }
+      )
+      _ <- Callback(println("updateValue"))
+    } yield ()
 
     def parseBigDecimal(s: String): BigDecimal = {
       if (s.isEmpty) BigDecimal(0)
@@ -88,20 +95,58 @@ object BillsGroup {
       _ <- Callback(println("Fake addNewBillItem"))
     } yield ()
 
-    def pickNameToEdit(e: ReactEvent) = for {
+    def pickGroupNameToEdit(groupName: String)(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("Fake pickNameToEdit"))
+      _ <- $.modState(_.copy(groupNameToEdit = groupName.some))
+      _ <- Callback(println("Fake pickGroupNameToEdit"))
     } yield ()
 
-    def pickNameToDelete(e: ReactEvent) = for {
+    def updateGroupName(e: ReactEventFromInput): Callback = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("Fake pickNameToDelete"))
+      _ <- e.stopPropagationCB
+      newValue = e.target.value
+      _ <- $.modState(_.modify(_.groupNameToEdit.each).setTo(newValue))
+      _ <- Callback(println("updateGroupName"))
+    } yield ()
+
+    def acceptEditGroupName(e: ReactEvent) = for {
+      _ <- e.preventDefaultCB
+      s <- $.state
+      _ <- Callback(println(s"acceptEditGroupName ${s.groupNameToEdit}"))
+      _ <- $.modState(_.copy(groupNameToEdit = None))
+    } yield ()
+
+    def clearGroupName(e: ReactEvent) = for {
+      _ <- e.preventDefaultCB
+      _ <- Callback(println("clear group name to edit"))
+      _ <- $.modState(_.copy(groupNameToEdit = None))
+    } yield ()
+
+    def pickGroupToDelete(group: BillGroup)(e: ReactEvent) = for {
+      _ <- e.preventDefaultCB
+      _ <- $.modState(_.copy(groupToDelete = group.some))
+      _ <- Callback(println("Fake pickGroupToDelete"))
+    } yield ()
+
+    def deleteGroup(e: ReactEvent) = for {
+      _ <- e.preventDefaultCB
+      _ <- Callback(println("delete GROUP"))
+      s <- $.state
+      _ <- Callback(println(s"Fake deleting ${s.groupToDelete}"))
+      _ <- $.modState(_.copy(groupToDelete = None))
+    } yield ()
+
+    def clearGroupToDelete(e: ReactEvent) = for {
+      _ <- e.preventDefaultCB
+      _ <- Callback(println("clear GROUP to delete"))
+      _ <- $.modState(_.copy(groupToDelete = None))
     } yield ()
 
     def render(props: Props, state: State) = {
       val toEdit = state.toEdit
-      <.div(
-        <.div(^.cls :="modal", ^.id := "exampleModal", ^.tabIndex := -1, ^.role := "dialog",
+
+      def deleteItemModal() =
+        <.div(^.cls :="modal", ^.id := "deleteItemModal", ^.tabIndex := -1, ^.role := "dialog",
           <.div(^.cls :="modal-dialog modal-dialog-centered", ^.role := "document",
             <.div(^.cls := "modal-content",
               <.div(^.cls := "modal-header",
@@ -114,70 +159,129 @@ object BillsGroup {
                 state.toDelete.fold(<.div("Error: there is no item to delete"))(item =>
                   <.div(
                     <.p("Are you sure you want to delete this item?"),
-                    <.p(s"${item.description}"),
-                    <.p(s"${item.value}")
+                    <.p(s"description: ${item.description}"),
+                    <.p(s"value: ${item.value}")
                   )
                 ),
               ),
               <.div(^.cls :="modal-footer",
                 <.button(^.tpe := "button", ^.cls :="btn btn-secondary", VdomAttr("data-dismiss") := "modal", "Close", ^.onClick ==> clearToDelete),
-                <.button(^.tpe := "button", ^.cls :="btn btn-primary", VdomAttr("data-dismiss") := "modal", "Delete item", ^.onClick ==> deleteItem)
+                <.button(^.tpe := "button", ^.cls :="btn btn-danger", VdomAttr("data-dismiss") := "modal", "Delete item", ^.onClick ==> deleteItem)
               )
             )
           )
-        ),
+        )
 
-        <.form(
-          <.div(^.cls := "card",
-            <.h5(^.cls := "card-header text-center",
-              "June",
-              <.div(^.cls := "btn-group float-right", ^.role := "group",
-                <.button(^.tpe := "button", ^.cls := "btn btn-warning", <.i(^.cls := "fas fa-edit"), ^.onClick ==> pickNameToEdit),
-                <.button(^.tpe := "button", ^.cls := "btn btn-danger", <.i(^.cls := "fas fa-trash"), ^.onClick ==> pickNameToDelete)
+      def deleteGroupModal() =
+        <.div(^.cls :="modal", ^.id := "deleteGroupModal", ^.tabIndex := -1, ^.role := "dialog",
+          <.div(^.cls :="modal-dialog modal-dialog-centered", ^.role := "document",
+            <.div(^.cls := "modal-content",
+              <.div(^.cls := "modal-header",
+                <.h5(^.cls := "modal-title", "Confirm"),
+                <.button(^.tpe := "button", ^.cls := "close", VdomAttr("data-dismiss") := "modal", ^.aria.label := "Close",
+                  <.span(^.aria.hidden := "true", "×"),
+                ),
+              ),
+              <.div(^.cls :="modal-body",
+                state.groupToDelete.fold(<.div("Error: there is no group to delete"))(group =>
+                  <.div(
+                    <.p("Are you sure you want to delete this Group?"),
+                    <.p(s"name: ${group.name}"),
+                    <.p(s"items: ${group.items.size}"),
+                    <.p(s"value: ${group.items.map(_.value).sum.toString}")
+                  )
+                ),
+              ),
+              <.div(^.cls :="modal-footer",
+                <.button(^.tpe := "button", ^.cls :="btn btn-secondary", VdomAttr("data-dismiss") := "modal", "Close", ^.onClick ==> clearGroupToDelete),
+                <.button(^.tpe := "button", ^.cls :="btn btn-danger", VdomAttr("data-dismiss") := "modal", "Delete item", ^.onClick ==> deleteGroup)
+              )
+            )
+          )
+        )
+
+      def itemList(items: IndexedSeq[BillItem]) = items.map { item =>
+        <.li(^.cls := "list-group-item", ^.key := item.id.getOrElse(item.description),
+          <.div(^.cls := "row align-items-center",
+            <.div(^.cls := "col-sm col-md-5 col-xl-7",
+              toEdit.filter(_.id == item.id).fold(item.description.toString(): VdomNode)(e =>
+                <.input(^.tpe := "text", ^.cls := "form-control", ^.value := e.description, ^.onChange ==> updateDescription)
               )
             ),
-            <.ul(^.cls := "list-group",
-              props.proxy().fold(<.div("wrong group id"): VdomNode)(group =>
-                React.Fragment(
-                  group.items.map { item =>
-                    <.li(^.cls := "list-group-item", ^.key := item.id.getOrElse(item.description),
-                      <.div(^.cls := "row align-items-center",
-                        <.div(^.cls := "col-sm col-md-5 col-xl-7",
-                          toEdit.filter(_.id == item.id).fold(item.description.toString(): VdomNode)(e =>
-                            <.input(^.tpe := "text", ^.cls := "form-control", ^.value := e.description, ^.onChange ==> updateDescription)
-                          )
-                        ),
-                        <.div(^.cls := "col-sm col-md col-xl",
-                          toEdit.filter(_.id == item.id).fold(item.value.toString(): VdomNode)(e =>
-                            <.input(^.tpe := "text", ^.cls := "form-control", ^.value := e.value.toString, ^.onChange ==> updateValue)
-                          )
-                        ),
-                        <.div(^.cls := "col-sm col-md col-xl text-right",
-                          toEdit match {
-                            case None =>
-                              <.div(^.cls := "btn-group", ^.role := "group",
-                                <.button(^.cls := "btn btn-warning", <.i(^.cls := "fas fa-edit"), ^.onClick ==> pickToEdit(item)),
-                                <.button(^.cls := "btn btn-danger", <.i(^.cls := "fas fa-trash"), ^.onClick ==> pickToDelete(item),
-                                  VdomAttr("data-toggle") :="modal", VdomAttr("data-target") := "#exampleModal"),
-                              )
-                            case Some(e) if e.id == item.id =>
-                              <.div(^.cls := "btn-group", ^.role := "group",
-                                <.button(^.cls := "btn btn-success", <.i(^.cls := "fas fa-check"), ^.onClick ==> acceptEdit),
-                                <.button(^.cls := "btn btn-primary", <.i(^.cls := "fas fa-history"), ^.onClick ==> clearToEdit)
-                              )
-                            case Some(_) =>
-                              <.div(^.cls := "btn-group", ^.role := "group",
-                                <.button(^.cls := "btn btn-warning", <.i(^.cls := "fas fa-edit"), ^.disabled := true),
-                                <.button(^.cls := "btn btn-danger", <.i(^.cls := "fas fa-trash"), ^.disabled := true)
-                              )
-                          }
-                        )
-                      )
+            <.div(^.cls := "col-sm col-md col-xl",
+              toEdit.filter(_.id == item.id).fold(item.value.toString(): VdomNode)(e =>
+                <.input(^.tpe := "text", ^.cls := "form-control", ^.value := e.value.toString, ^.onChange ==> updateValue)
+              )
+            ),
+            <.div(^.cls := "col-sm col-md col-xl text-right",
+              <.div(^.cls := "btn-group", ^.role := "group",
+                toEdit match {
+                  case None =>
+                    React.Fragment(
+                      <.button(^.tpe := "button", ^.cls := "btn btn-warning", <.i(^.cls := "fas fa-edit"), ^.onClick ==> pickToEdit(item)),
+                      <.button(^.tpe := "button", ^.cls := "btn btn-danger", <.i(^.cls := "fas fa-trash"), ^.onClick ==> pickToDelete(item),
+                        VdomAttr("data-toggle") :="modal", VdomAttr("data-target") := "#deleteItemModal"),
                     )
-                  }.toVdomArray,
+                  case Some(e) if e.id == item.id =>
+                    React.Fragment(
+                      <.button(^.tpe := "button", ^.cls := "btn btn-success", <.i(^.cls := "fas fa-check"), ^.onClick ==> acceptEdit),
+                      <.button(^.tpe := "button", ^.cls := "btn btn-primary", <.i(^.cls := "fas fa-history"), ^.onClick ==> clearToEdit)
+                    )
+                  case Some(_) =>
+                    React.Fragment(
+                      <.button(^.tpe := "button", ^.cls := "btn btn-warning", <.i(^.cls := "fas fa-edit"), ^.disabled := true),
+                      <.button(^.tpe := "button", ^.cls := "btn btn-danger", <.i(^.cls := "fas fa-trash"), ^.disabled := true)
+                    )
+                }
+              )
+            )
+          )
+        )
+      }.toVdomArray
+
+      def groupNameHeader(group: BillGroup) =
+        <.h5(^.cls := "card-header text-center",
+          <.div(^.cls := "row align-items-center",
+
+            <.div(^.cls := "col-sm col-md-9 col-xl-10",
+              state.groupNameToEdit.fold(group.name: VdomNode)(groupNameToEdit =>
+                <.input(^.tpe := "text", ^.cls := "form-control", ^.value := groupNameToEdit, ^.onChange ==> updateGroupName)
+              )
+            ),
+            <.div(^.cls := "col-sm col-md col-xl text-right",
+              <.div(^.cls := "btn-group", ^.role := "group",
+                state.groupNameToEdit.fold(
+                  React.Fragment(
+                    <.button(^.tpe := "button", ^.cls := "btn btn-warning", <.i(^.cls := "fas fa-edit"), ^.onClick ==> pickGroupNameToEdit(group.name)),
+                    <.button(^.tpe := "button", ^.cls := "btn btn-danger", <.i(^.cls := "fas fa-trash"), ^.onClick ==> pickGroupToDelete(group),
+                      VdomAttr("data-toggle") :="modal", VdomAttr("data-target") := "#deleteGroupModal")
+                  )
+                )(groupNameToEdit =>
+                  React.Fragment(
+                    <.button(^.tpe := "button", ^.cls := "btn btn-success", <.i(^.cls := "fas fa-check"), ^.onClick ==> acceptEditGroupName),
+                    <.button(^.tpe := "button", ^.cls := "btn btn-primary", <.i(^.cls := "fas fa-history"), ^.onClick ==> clearGroupName)
+                  )
+                )
+              )
+            )
+          )
+        )
+
+      <.div(
+
+        deleteItemModal(),
+        deleteGroupModal(),
+
+        <.form(^.action := "javascript:void(0);",
+          <.div(^.cls := "card",
+            props.proxy().fold(<.div("This group doesn't exist anymore."): VdomNode)(group =>
+              React.Fragment(
+                groupNameHeader(group),
+                <.ul(^.cls := "list-group",
+                  itemList(group.items),
                   <.div(^.cls := "card-body text-center",
-                    <.button(^.cls := "btn btn-success", <.i(^.cls := "fas fa-plus"), ^.onClick ==> addNewBillItem)
-                  ),
+                      <.button(^.tpe := "button", ^.cls := "btn btn-success", <.i(^.cls := "fas fa-plus"), ^.onClick ==> addNewBillItem)
+                    ),
                   <.div(^.cls := "card-footer text-muted text-center", group.items.map(_.value).sum.toString)
                 )
               )

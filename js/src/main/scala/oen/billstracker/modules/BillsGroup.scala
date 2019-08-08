@@ -140,27 +140,29 @@ object BillsGroup {
 
     def clearGroupName(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("clear group name to edit"))
       _ <- $.modState(_.copy(groupNameToEdit = None))
     } yield ()
 
     def pickGroupToDelete(group: BillGroup)(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
       _ <- $.modState(_.copy(groupToDelete = group.some))
-      _ <- Callback(println("Fake pickGroupToDelete"))
     } yield ()
 
     def deleteGroup(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("delete GROUP"))
+      p <- $.props
       s <- $.state
-      _ <- Callback(println(s"Fake deleting ${s.groupToDelete}"))
+      deleteGroupAction = for {
+        me <- p.proxy()._1
+        group <- p.proxy()._2
+        groupId <- group.id
+      } yield DeleteGroupA(me.token, groupId)
+      _ <- deleteGroupAction.fold(Callback.empty)(p.proxy.dispatchCB)
       _ <- $.modState(_.copy(groupToDelete = None))
     } yield ()
 
     def clearGroupToDelete(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("clear GROUP to delete"))
       _ <- $.modState(_.copy(groupToDelete = None))
     } yield ()
 

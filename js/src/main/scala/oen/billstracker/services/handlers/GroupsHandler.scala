@@ -25,5 +25,13 @@ class GroupsHandler[M](modelRW: ModelRW[M, Option[IndexedSeq[BillGroup]]]) exten
         else group
       })
       updated(newValue)
+
+    case DeleteGroupA(token, groupId) =>
+      val deleteGroup = Effect(AjaxClient.deleteGroup(token, groupId).map(_ => GroupDeletedA(groupId)))
+      effectOnly(deleteGroup)
+
+    case GroupDeletedA(groupId) =>
+      val newValue = value.modify(_.each).using(_.filter(_.id != groupId.some))
+      updated(newValue)
   }
 }

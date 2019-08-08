@@ -37,7 +37,7 @@ class GroupsEndpoints[F[_] : Effect](
       groupDbId = BSONObjectID.parse(groupId).getOrElse(BSONObjectID.generate())
       itemDbId = BSONObjectID.parse(itemId).getOrElse(BSONObjectID.generate())
       deleteResult <- groupsService.deleteItem(user, groupDbId, itemDbId)
-      rr <- deleteResult.fold(BadRequest("Item not found"))(_ => Ok())
+      rr <- deleteResult.fold(BadRequest("Item not found"))(_ => NoContent())
     } yield rr
 
     case authReq @ POST -> Root / groupId / "items" as user => for {
@@ -65,6 +65,13 @@ class GroupsEndpoints[F[_] : Effect](
       groupDbId = BSONObjectID.parse(groupId).getOrElse(BSONObjectID.generate())
       maybeSuccess <- groupsService.updateGroupName(user, groupDbId, billGroup.name)
       rr <- maybeSuccess.fold(BadRequest("Can't update group"))(_ => NoContent())
+    } yield rr
+
+    case authReq @ DELETE -> Root / groupId as user => for {
+      _ <- Effect[F].unit
+      groupDbId = BSONObjectID.parse(groupId).getOrElse(BSONObjectID.generate())
+      deleteResult <- groupsService.deleteGroup(user, groupDbId)
+      rr <- deleteResult.fold(BadRequest("Group not found"))(_ => NoContent())
     } yield rr
   }
   val endpoints: HttpRoutes[F] = authMiddleware(authedEndpoints)

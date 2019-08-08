@@ -81,6 +81,13 @@ class MongoServiceImpl[F[_] : Effect](dbUsers: BSONCollection, implicit val dbEc
     upd = BSONDocument("$set" -> BSONDocument("billsGroups.$.name" -> name))
     res <- dbUsers.update.one(query, upd).toF.handleErr
   } yield res
+
+  def deleteGroup(dbUser: DbUser, groupId: BSONObjectID): F[Option[UpdateWriteResult]] = for {
+    _ <- Effect[F].unit
+    query = BSONDocument("_id" -> dbUser._id)
+    upd = BSONDocument("$pull" -> BSONDocument("billsGroups" -> BSONDocument("id" -> groupId)))
+    res <- dbUsers.update.one(query, upd).toF.handleErr
+  } yield res
 }
 
 object MongoServiceImpl {

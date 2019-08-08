@@ -15,6 +15,7 @@ trait GroupsService[F[_]] {
   def addItem(user: DbUser, groupId: BSONObjectID): F[Option[DbBillItem]]
   def updateItem(user: DbUser, groupId: BSONObjectID, dbBillItem: DbBillItem): F[Option[ResponseCode]]
   def updateGroupName(user: DbUser, groupId: BSONObjectID, name: String): F[Option[ResponseCode]]
+  def deleteGroup(user: DbUser, groupId: BSONObjectID): F[Option[ResponseCode]]
 }
 
 class GroupsServiceImpl[F[_] : Effect](mongoService: MongoService[F]) extends GroupsService[F] {
@@ -27,7 +28,6 @@ class GroupsServiceImpl[F[_] : Effect](mongoService: MongoService[F]) extends Gr
   } yield resp
 
   def deleteItem(user: DbUser, groupId: BSONObjectID, itemId: BSONObjectID): F[Option[ResponseCode]] = for {
-    _ <- Effect[F].unit
     wRes <- mongoService.deleteItem(user, groupId, itemId)
     resp = wRes.map(_ => SuccessResponse)
   } yield resp
@@ -46,6 +46,11 @@ class GroupsServiceImpl[F[_] : Effect](mongoService: MongoService[F]) extends Gr
 
   def updateGroupName(user: DbUser, groupId: BSONObjectID, name: String): F[Option[ResponseCode]] = for {
     wRes <- mongoService.updateGroupName(user, groupId, name)
+    resp = wRes.map(_ => SuccessResponse)
+  } yield resp
+
+  def deleteGroup(user: DbUser, groupId: BSONObjectID): F[Option[ResponseCode]] = for {
+    wRes <- mongoService.deleteGroup(user, groupId)
     resp = wRes.map(_ => SuccessResponse)
   } yield resp
 }

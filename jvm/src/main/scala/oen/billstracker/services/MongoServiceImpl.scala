@@ -15,6 +15,7 @@ import org.log4s.getLogger
 import org.log4s.Logger
 import oen.billstracker.model.StorageData.DbBillGroup
 import reactivemongo.bson.BSONObjectID
+import oen.billstracker.model.StorageData.DbBillItem
 
 class MongoServiceImpl[F[_] : Effect](dbUsers: BSONCollection, implicit val dbEc: ExecutionContext) extends MongoService[F] {
 
@@ -56,6 +57,13 @@ class MongoServiceImpl[F[_] : Effect](dbUsers: BSONCollection, implicit val dbEc
     _ <- Effect[F].unit
     query = BSONDocument("_id" -> dbUser._id, "billsGroups.id" -> groupId)
     upd = BSONDocument("$pull" -> BSONDocument("billsGroups.$.items" -> BSONDocument("id" -> itemId)))
+    res <- dbUsers.update.one(query, upd).toF.handleErr
+  } yield res
+
+  def addItem(dbUser: DbUser, groupId: BSONObjectID, item: DbBillItem): F[Option[UpdateWriteResult]] = for {
+    _ <- Effect[F].unit
+    query = BSONDocument("_id" -> dbUser._id, "billsGroups.id" -> groupId)
+    upd = BSONDocument("$push" -> BSONDocument("billsGroups.$.items" -> item))
     res <- dbUsers.update.one(query, upd).toF.handleErr
   } yield res
 }

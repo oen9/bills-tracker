@@ -12,6 +12,7 @@ import oen.billstracker.shared.Dto.ResponseCode
 trait GroupsService[F[_]] {
   def addGroup(user: DbUser, newGroup: DbBillGroup): F[Option[DbBillGroup]]
   def deleteItem(user: DbUser, groupId: BSONObjectID, itemId: BSONObjectID): F[Option[ResponseCode]]
+  def addItem(user: DbUser, groupId: BSONObjectID): F[Option[DbBillItem]]
 }
 
 class GroupsServiceImpl[F[_] : Effect](mongoService: MongoService[F]) extends GroupsService[F] {
@@ -27,6 +28,13 @@ class GroupsServiceImpl[F[_] : Effect](mongoService: MongoService[F]) extends Gr
     _ <- Effect[F].unit
     wRes <- mongoService.deleteItem(user, groupId, itemId)
     resp = wRes.map(_ => SuccessResponse)
+  } yield resp
+
+  def addItem(user: DbUser, groupId: BSONObjectID): F[Option[DbBillItem]] = for {
+    _ <- Effect[F].unit
+    newBillItem = DbBillItem(id = BSONObjectID.generate().some)
+    wRes <- mongoService.addItem(user, groupId, newBillItem)
+    resp = wRes.map(_ => newBillItem)
   } yield resp
 }
 

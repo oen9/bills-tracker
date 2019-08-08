@@ -6,6 +6,7 @@ import diode.data.Empty
 import diode.data.PotAction
 import oen.billstracker.shared.Dto.User
 import oen.billstracker.shared.Dto.BillGroup
+import oen.billstracker.shared.Dto.BillItem
 
 object WebData {
   case class Clicks(count: Int)
@@ -29,6 +30,8 @@ object WebData {
 
   case class DeleteItemA(token: String, billGroupId: String, itemId: String) extends Action
   case class ItemDeletedA(billGroupId: String, itemId: String) extends Action
+  case class AddNewItemA(token: String, billGroupId: String) extends Action
+  case class NewItemAddedA(billgroupId: String, billItem: BillItem) extends Action
 
   case object IncreaseClicks extends Action // TODO remove it
 

@@ -11,6 +11,7 @@ import io.scalaland.chimney.dsl._
 import scala.util.Try
 import oen.billstracker.services.WebData.DeleteItemA
 import oen.billstracker.services.WebData.Me
+import oen.billstracker.services.WebData.AddNewItemA
 
 object BillsGroup {
   case class Props(proxy: ModelProxy[(Option[Me], Option[BillGroup])])
@@ -45,7 +46,6 @@ object BillsGroup {
 
     def clearToDelete(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("clearToDelete"))
       _ <- $.modState(_.copy(toDelete = None))
     } yield ()
 
@@ -101,7 +101,13 @@ object BillsGroup {
 
     def addNewBillItem(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("Fake addNewBillItem"))
+      p <- $.props
+      addNewItemAction = for {
+          me <- p.proxy()._1
+          group <- p.proxy()._2
+          groupId <- group.id
+        } yield AddNewItemA(me.token, groupId)
+      _ <- addNewItemAction.fold(Callback.empty)(p.proxy.dispatchCB)
     } yield ()
 
     def pickGroupNameToEdit(groupName: String)(e: ReactEvent) = for {

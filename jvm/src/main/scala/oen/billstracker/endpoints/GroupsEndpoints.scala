@@ -20,7 +20,7 @@ class GroupsEndpoints[F[_] : Effect](
   authMiddleware: AuthMiddleware[F, DbUser],
   groupsService: GroupsService[F]
 ) extends Http4sDsl[F] {
-  private[this] implicit val userDecoder = jsonOf[F, BillGroup]
+  private[this] implicit val billGroupDecoder = jsonOf[F, BillGroup]
 
   val authedEndpoints: AuthedService[DbUser, F] = AuthedService {
     case authReq @ POST -> Root as user => for {
@@ -37,6 +37,14 @@ class GroupsEndpoints[F[_] : Effect](
       itemDbId = BSONObjectID.parse(itemId).getOrElse(BSONObjectID.generate())
       deleteResult <- groupsService.deleteItem(user, groupDbId, itemDbId)
       rr <- deleteResult.fold(BadRequest("Item not found"))(_ => Ok())
+    } yield rr
+
+    case authReq @ POST -> Root / groupId / "items" as user => for {
+      _ <- Effect[F].unit
+      groupDbId = BSONObjectID.parse(groupId).getOrElse(BSONObjectID.generate())
+      addItemResult <- groupsService.addItem(user, groupDbId)
+      maybeAddedItem = addItemResult.map(_.into[BillItem].transform)
+      rr <- maybeAddedItem.fold(BadRequest("Probably wrong group id"))(addedItem => Created(addedItem.asJson))
     } yield rr
   }
   val endpoints: HttpRoutes[F] = authMiddleware(authedEndpoints)

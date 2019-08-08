@@ -56,6 +56,13 @@ object AjaxClient {
     ).transform(_.responseText, onFailure)
   }
 
+  def addItem(token: String, groupId: String) = {
+    Ajax.post(
+      url = s"/groups/$groupId/items",
+      headers = JSON_TYPE + authHeader(token)
+    ).transform(decodeAndHandleErrors[BillItem])
+  }
+
   private[this] def decodeAndHandleErrors[A: Decoder](t: Try[XMLHttpRequest]): Try[A] = t match {
     case Success(req) => decode[A](req.responseText).toTry
     case Failure(e) => Failure(onFailure(e))

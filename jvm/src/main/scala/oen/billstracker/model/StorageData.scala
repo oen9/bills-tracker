@@ -12,7 +12,7 @@ object StorageData {
     token: String = "",
     billsGroups: IndexedSeq[DbBillGroup] = IndexedSeq())
   case class DbBillGroup(name: String, items: IndexedSeq[DbBillItem] = IndexedSeq(), id: Option[BSONObjectID] = None)
-  case class DbBillItem(description: String, value: BigDecimal, id: Option[BSONObjectID] = None)
+  case class DbBillItem(description: String = "new item", value: BigDecimal = BigDecimal(0), id: Option[BSONObjectID] = None)
 
   implicit val bSONObjectIDToString: Transformer[BSONObjectID, String] = (id: BSONObjectID) => id.stringify
   implicit val stringToBSONObjectID: Transformer[String, BSONObjectID] = (id: String) => BSONObjectID.parse(id).fold(_ => BSONObjectID.generate(), identity)

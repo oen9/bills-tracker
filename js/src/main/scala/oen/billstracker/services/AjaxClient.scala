@@ -49,6 +49,13 @@ object AjaxClient {
     ).transform(decodeAndHandleErrors[BillGroup])
   }
 
+  def deleteItem(token: String, groupId: String, itemId: String) = {
+    Ajax.delete(
+      url = s"/groups/$groupId/items/$itemId",
+      headers = JSON_TYPE + authHeader(token)
+    ).transform(_.responseText, onFailure)
+  }
+
   private[this] def decodeAndHandleErrors[A: Decoder](t: Try[XMLHttpRequest]): Try[A] = t match {
     case Success(req) => decode[A](req.responseText).toTry
     case Failure(e) => Failure(onFailure(e))

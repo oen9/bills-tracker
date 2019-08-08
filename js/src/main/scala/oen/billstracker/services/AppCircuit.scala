@@ -27,16 +27,18 @@ object AppCircuit extends Circuit[RootModel] with ReactConnector[RootModel] {
     })),
     new MeSignHandler(zoomTo(_.me)),
     new UserHandler(zoomTo(_.user)),
-    new GroupsHandler(
-      zoomMapRW(_.user)(_.billsGroups)((root, maybeGroups) => {
-        maybeGroups.fold(root)(newGroups =>
-          root.modify(_.user.each.billsGroups).setTo(newGroups)
-        )
-      })
-    ),
+    new GroupsHandler(zoomToGroups),
+    new ItemsHandler(zoomToGroups),
     foldHandlers( // to broadcast actions e.g. ClearPotA
       new SignHandler(zoomTo(_.signModel.potResult)),
       new NewGroupHandler(zoomTo(_.pots.newGroupResult))
     )
   )
+
+  private[this] def zoomToGroups =
+    zoomMapRW(_.user)(_.billsGroups)((root, maybeGroups) => {
+      maybeGroups.fold(root)(newGroups =>
+        root.modify(_.user.each.billsGroups).setTo(newGroups)
+      )
+    })
 }

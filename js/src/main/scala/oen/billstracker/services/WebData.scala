@@ -27,6 +27,9 @@ object WebData {
   case class GotUserDataA(u: User) extends Action
   case class NewGroupAddedA(group: BillGroup) extends Action
 
+  case class DeleteItemA(token: String, billGroupId: String, itemId: String) extends Action
+  case class ItemDeletedA(billGroupId: String, itemId: String) extends Action
+
   case object IncreaseClicks extends Action // TODO remove it
 
   case class TrySignUp(username: String, password: String, potResult: Pot[String] = Empty) extends PotAction[String, TrySignUp] {

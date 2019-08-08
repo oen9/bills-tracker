@@ -14,6 +14,7 @@ import io.circe.generic.extras.auto._
 import oen.billstracker.model.StorageData._
 import io.scalaland.chimney.dsl._
 import oen.billstracker.services.GroupsService
+import reactivemongo.bson.BSONObjectID
 
 class GroupsEndpoints[F[_] : Effect](
   authMiddleware: AuthMiddleware[F, DbUser],
@@ -28,6 +29,14 @@ class GroupsEndpoints[F[_] : Effect](
       maybeAddedDbGroup <- groupsService.addGroup(user, dbBillGroup)
       maybeAddedGroup = maybeAddedDbGroup.map(_.into[BillGroup].transform)
       rr <- maybeAddedGroup.fold(BadRequest("Can' create group"))(addedGroup => Created(addedGroup.asJson))
+    } yield rr
+
+    case authReq @ DELETE -> Root / groupId / "items" / itemId as user => for {
+      _ <- Effect[F].unit
+      groupDbId = BSONObjectID.parse(groupId).getOrElse(BSONObjectID.generate())
+      itemDbId = BSONObjectID.parse(itemId).getOrElse(BSONObjectID.generate())
+      deleteResult <- groupsService.deleteItem(user, groupDbId, itemDbId)
+      rr <- deleteResult.fold(BadRequest("Item not found"))(_ => Ok())
     } yield rr
   }
   val endpoints: HttpRoutes[F] = authMiddleware(authedEndpoints)

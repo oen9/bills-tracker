@@ -9,9 +9,11 @@ import cats.implicits._
 import com.softwaremill.quicklens._
 import io.scalaland.chimney.dsl._
 import scala.util.Try
+import oen.billstracker.services.WebData.DeleteItemA
+import oen.billstracker.services.WebData.Me
 
 object BillsGroup {
-  case class Props(proxy: ModelProxy[Option[BillGroup]])
+  case class Props(proxy: ModelProxy[(Option[Me], Option[BillGroup])])
   case class State(
     toDelete: Option[BillItem] = None,
     toEdit: Option[EditedBillItem] = None,
@@ -28,9 +30,16 @@ object BillsGroup {
 
     def deleteItem(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("deleteItem"))
       s <- $.state
-      _ <- Callback(println(s"Fake deleting ${s.toDelete}"))
+      p <- $.props
+      deleteItemAction = for {
+          me <- p.proxy()._1
+          group <- p.proxy()._2
+          groupId <- group.id
+          item <- s.toDelete
+          itemId <- item.id
+        } yield DeleteItemA(me.token, groupId, itemId)
+      _ <- deleteItemAction.fold(Callback.empty)(p.proxy.dispatchCB)
       _ <- $.modState(_.copy(toDelete = None))
     } yield ()
 
@@ -274,7 +283,7 @@ object BillsGroup {
 
         <.form(^.action := "javascript:void(0);",
           <.div(^.cls := "card",
-            props.proxy().fold(<.div("This group doesn't exist anymore."): VdomNode)(group =>
+            props.proxy()._2.fold(<.div("This group doesn't exist anymore."): VdomNode)(group =>
               React.Fragment(
                 groupNameHeader(group),
                 <.ul(^.cls := "list-group",
@@ -297,5 +306,5 @@ object BillsGroup {
     .renderBackend[Backend]
     .build
 
-  def apply(proxy: ModelProxy[Option[BillGroup]]) = component(Props(proxy))
+  def apply(proxy: ModelProxy[(Option[Me], Option[BillGroup])]) = component(Props(proxy))
 }

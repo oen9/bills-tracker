@@ -43,7 +43,11 @@ object BillsTrackerApp {
       val newGroupModel = AppCircuit.zoom(_.pots.newGroupResult)
       meModel.zip(newGroupModel)
     }
-    def billGroupWrapper(id: String) = AppCircuit.connect(_.user.flatMap(_.billsGroups.filter(_.id == id.some).headOption))
+    def billGroupWrapper(id: String) = AppCircuit.connect {
+      val meModel = AppCircuit.zoom(_.me)
+      val groupsModel = AppCircuit.zoom(_.user.flatMap(_.billsGroups.filter(_.id == id.some).headOption))
+      meModel.zip(groupsModel)
+    }
 
     val routerConfig = RouterConfigDsl[Loc].buildConfig { dsl =>
       import dsl._

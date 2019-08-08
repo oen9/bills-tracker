@@ -13,6 +13,7 @@ import reactivemongo.api.indexes.IndexType
 import reactivemongo.api.FailoverStrategy
 import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.commands.UpdateWriteResult
+import reactivemongo.bson.BSONObjectID
 
 trait MongoService[F[_]] {
   def createUser(pu: PlainUser): F[Option[WriteResult]]
@@ -22,6 +23,7 @@ trait MongoService[F[_]] {
   def updateToken(token: String, dbUser: DbUser): F[Option[UpdateWriteResult]]
 
   def addGroup(dbUser: DbUser, group: DbBillGroup): F[Option[UpdateWriteResult]]
+  def deleteItem(user: DbUser, groupId: BSONObjectID, itemId: BSONObjectID): F[Option[UpdateWriteResult]]
 }
 
 object MongoService {

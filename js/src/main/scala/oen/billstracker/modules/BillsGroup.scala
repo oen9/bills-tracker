@@ -85,7 +85,6 @@ object BillsGroup {
       _ <- e.preventDefaultCB
       newValue = e.target.value
       _ <- $.modState(_.modify(_.toEdit.each.description).setTo(newValue))
-      _ <- Callback(println("updateDescription"))
     } yield ()
 
     def updateValue(e: ReactEventFromInput): Callback = for {
@@ -95,7 +94,6 @@ object BillsGroup {
         _ => Callback.empty,
         _ => $.modState(_.modify(_.toEdit.each.value).setTo(newValue))
       )
-      _ <- Callback(println("updateValue"))
     } yield ()
 
     def parseBigDecimal(s: String): BigDecimal = {
@@ -117,7 +115,6 @@ object BillsGroup {
     def pickGroupNameToEdit(groupName: String)(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
       _ <- $.modState(_.copy(groupNameToEdit = groupName.some))
-      _ <- Callback(println("Fake pickGroupNameToEdit"))
     } yield ()
 
     def updateGroupName(e: ReactEventFromInput): Callback = for {
@@ -125,13 +122,19 @@ object BillsGroup {
       _ <- e.stopPropagationCB
       newValue = e.target.value
       _ <- $.modState(_.modify(_.groupNameToEdit.each).setTo(newValue))
-      _ <- Callback(println("updateGroupName"))
     } yield ()
 
     def acceptEditGroupName(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
       s <- $.state
-      _ <- Callback(println(s"acceptEditGroupName ${s.groupNameToEdit}"))
+      p <- $.props
+      updateGroupNameAction = for {
+        me <- p.proxy()._1
+        group <- p.proxy()._2
+        groupId <- group.id
+        groupNameToEdit <- s.groupNameToEdit
+      } yield UpdateGroupNameA(me.token, groupId, groupNameToEdit)
+      _ <- updateGroupNameAction.fold(Callback.empty)(p.proxy.dispatchCB)
       _ <- $.modState(_.copy(groupNameToEdit = None))
     } yield ()
 

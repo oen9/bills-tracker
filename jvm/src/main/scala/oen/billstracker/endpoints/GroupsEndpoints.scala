@@ -29,7 +29,7 @@ class GroupsEndpoints[F[_] : Effect](
       dbBillGroup = billGroup.into[DbBillGroup].transform
       maybeAddedDbGroup <- groupsService.addGroup(user, dbBillGroup)
       maybeAddedGroup = maybeAddedDbGroup.map(_.into[BillGroup].transform)
-      rr <- maybeAddedGroup.fold(BadRequest("Can' create group"))(addedGroup => Created(addedGroup.asJson))
+      rr <- maybeAddedGroup.fold(BadRequest("Can't create group"))(addedGroup => Created(addedGroup.asJson))
     } yield rr
 
     case authReq @ DELETE -> Root / groupId / "items" / itemId as user => for {
@@ -60,6 +60,12 @@ class GroupsEndpoints[F[_] : Effect](
       rr <- maybeSuccess.fold(BadRequest("Can't update item"))(_ => NoContent())
     } yield rr
 
+    case authReq @ PUT -> Root / groupId as user => for {
+      billGroup <- authReq.req.as[BillGroup]
+      groupDbId = BSONObjectID.parse(groupId).getOrElse(BSONObjectID.generate())
+      maybeSuccess <- groupsService.updateGroupName(user, groupDbId, billGroup.name)
+      rr <- maybeSuccess.fold(BadRequest("Can't update group"))(_ => NoContent())
+    } yield rr
   }
   val endpoints: HttpRoutes[F] = authMiddleware(authedEndpoints)
 }

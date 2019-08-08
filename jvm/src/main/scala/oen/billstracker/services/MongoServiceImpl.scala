@@ -66,6 +66,14 @@ class MongoServiceImpl[F[_] : Effect](dbUsers: BSONCollection, implicit val dbEc
     upd = BSONDocument("$push" -> BSONDocument("billsGroups.$.items" -> item))
     res <- dbUsers.update.one(query, upd).toF.handleErr
   } yield res
+
+  def updateItem(dbUser: DbUser, groupId: BSONObjectID, item: DbBillItem): F[Option[UpdateWriteResult]] = for {
+    _ <- Effect[F].unit
+    query = BSONDocument("_id" -> dbUser._id)
+    upd = BSONDocument("$set" -> BSONDocument("billsGroups.$[group].items.$[element]" -> item))
+    arrayFilters = Seq(BSONDocument("group.id" -> groupId), BSONDocument("element.id" -> item.id))
+    res <- dbUsers.update.one(query, upd, false, false, None, arrayFilters).toF.handleErr
+  } yield res
 }
 
 object MongoServiceImpl {

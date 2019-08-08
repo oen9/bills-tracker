@@ -63,6 +63,14 @@ object AjaxClient {
     ).transform(decodeAndHandleErrors[BillItem])
   }
 
+  def updateItem(token: String, groupId: String, itemId: String, data: BillItem) = {
+    Ajax.put(
+      url = s"/groups/$groupId/items/$itemId",
+      data = data.asJson.noSpaces,
+      headers = JSON_TYPE + authHeader(token)
+    ).transform(_.responseText, onFailure)
+  }
+
   private[this] def decodeAndHandleErrors[A: Decoder](t: Try[XMLHttpRequest]): Try[A] = t match {
     case Success(req) => decode[A](req.responseText).toTry
     case Failure(e) => Failure(onFailure(e))

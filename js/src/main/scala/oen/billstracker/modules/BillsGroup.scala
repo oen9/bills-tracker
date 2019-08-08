@@ -9,9 +9,7 @@ import cats.implicits._
 import com.softwaremill.quicklens._
 import io.scalaland.chimney.dsl._
 import scala.util.Try
-import oen.billstracker.services.WebData.DeleteItemA
-import oen.billstracker.services.WebData.Me
-import oen.billstracker.services.WebData.AddNewItemA
+import oen.billstracker.services.WebData._
 
 object BillsGroup {
   case class Props(proxy: ModelProxy[(Option[Me], Option[BillGroup])])
@@ -51,7 +49,6 @@ object BillsGroup {
 
     def pickToEdit(toEdit: BillItem)(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("pickToEdit"))
       _ <- $.modState(_.copy(toEdit = toEdit.into[EditedBillItem]
         .withFieldComputed(_.value, _.value.toString())
         .transform
@@ -61,13 +58,20 @@ object BillsGroup {
 
     def acceptEdit(e: ReactEvent) = for {
       _ <- e.preventDefaultCB
-      _ <- Callback(println("acceptEdit"))
       s <- $.state
-      asBillItem = s.toEdit.map(_.into[BillItem]
-        .withFieldComputed(_.value, edited => parseBigDecimal(edited.value))
-        .transform
-      )
-      _ <- Callback(println(s"$asBillItem has been edited"))
+      p <- $.props
+      maybeBillItem = s.toEdit.map(_.into[BillItem]
+          .withFieldComputed(_.value, edited => parseBigDecimal(edited.value))
+          .transform
+        )
+      updateBillItemAction = for {
+          me <- p.proxy()._1
+          group <- p.proxy()._2
+          groupId <- group.id
+          billItem <- maybeBillItem
+          itemId <- billItem.id
+        } yield UpdateItemA(me.token, groupId, itemId, billItem)
+      _ <- updateBillItemAction.fold(Callback.empty)(p.proxy.dispatchCB)
       _ <- $.modState(_.copy(toEdit = None))
     } yield ()
 

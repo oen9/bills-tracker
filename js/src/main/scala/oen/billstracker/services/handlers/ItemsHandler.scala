@@ -27,6 +27,18 @@ class ItemsHandler[M](modelRW: ModelRW[M, Option[IndexedSeq[BillGroup]]]) extend
     case NewItemAddedA(groupId, billItem) =>
       val newValue = modGroup(value, groupId)(_.modify(_.items).using(_ :+ billItem))
       updated(newValue)
+
+    case UpdateItemA(token, groupId, itemId, item) =>
+      val updateItem = Effect(AjaxClient.updateItem(token, groupId, itemId, item).map(_ => ItemUpdatedA(groupId, itemId, item)))
+      effectOnly(updateItem)
+
+    case ItemUpdatedA(groupId, itemId, item) =>
+      val newValue = modGroup(value, groupId)(_.modify(_.items).using(_.map { oldItem =>
+        if (oldItem.id == itemId.some) item
+        else oldItem
+      }))
+      updated(newValue)
+
   }
 
   def modGroup(value: Option[IndexedSeq[BillGroup]], groupId: String)(op: BillGroup => BillGroup): Option[IndexedSeq[BillGroup]] = {

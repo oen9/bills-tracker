@@ -21,6 +21,7 @@ class GroupsEndpoints[F[_] : Effect](
   groupsService: GroupsService[F]
 ) extends Http4sDsl[F] {
   private[this] implicit val billGroupDecoder = jsonOf[F, BillGroup]
+  private[this] implicit val billItemDecoder = jsonOf[F, BillItem]
 
   val authedEndpoints: AuthedService[DbUser, F] = AuthedService {
     case authReq @ POST -> Root as user => for {
@@ -44,8 +45,21 @@ class GroupsEndpoints[F[_] : Effect](
       groupDbId = BSONObjectID.parse(groupId).getOrElse(BSONObjectID.generate())
       addItemResult <- groupsService.addItem(user, groupDbId)
       maybeAddedItem = addItemResult.map(_.into[BillItem].transform)
-      rr <- maybeAddedItem.fold(BadRequest("Probably wrong group id"))(addedItem => Created(addedItem.asJson))
+      rr <- maybeAddedItem.fold(BadRequest("Can't create item"))(addedItem => Created(addedItem.asJson))
     } yield rr
+
+    case authReq @ PUT -> Root / groupId / "items" / itemId as user => for {
+      billItem <- authReq.req.as[BillItem]
+      groupDbId = BSONObjectID.parse(groupId).getOrElse(BSONObjectID.generate())
+      itemDbId = BSONObjectID.parse(itemId).getOrElse(BSONObjectID.generate())
+      dbBillItem = billItem.into[DbBillItem]
+        .withFieldComputed(_.id, _ => itemDbId.some)
+        .transform
+
+      maybeSuccess <- groupsService.updateItem(user, groupDbId, dbBillItem)
+      rr <- maybeSuccess.fold(BadRequest("Can't update item"))(_ => NoContent())
+    } yield rr
+
   }
   val endpoints: HttpRoutes[F] = authMiddleware(authedEndpoints)
 }

@@ -25,6 +25,7 @@ trait MongoService[F[_]] {
   def addGroup(dbUser: DbUser, group: DbBillGroup): F[Option[UpdateWriteResult]]
   def deleteItem(dbUser: DbUser, groupId: BSONObjectID, itemId: BSONObjectID): F[Option[UpdateWriteResult]]
   def addItem(dbUser: DbUser, groupId: BSONObjectID, item: DbBillItem): F[Option[UpdateWriteResult]]
+  def updateItem(dbUser: DbUser, groupId: BSONObjectID, item: DbBillItem): F[Option[UpdateWriteResult]]
 }
 
 object MongoService {

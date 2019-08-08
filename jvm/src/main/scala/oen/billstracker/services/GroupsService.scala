@@ -13,6 +13,7 @@ trait GroupsService[F[_]] {
   def addGroup(user: DbUser, newGroup: DbBillGroup): F[Option[DbBillGroup]]
   def deleteItem(user: DbUser, groupId: BSONObjectID, itemId: BSONObjectID): F[Option[ResponseCode]]
   def addItem(user: DbUser, groupId: BSONObjectID): F[Option[DbBillItem]]
+  def updateItem(user: DbUser, groupId: BSONObjectID, dbBillItem: DbBillItem): F[Option[ResponseCode]]
 }
 
 class GroupsServiceImpl[F[_] : Effect](mongoService: MongoService[F]) extends GroupsService[F] {
@@ -35,6 +36,11 @@ class GroupsServiceImpl[F[_] : Effect](mongoService: MongoService[F]) extends Gr
     newBillItem = DbBillItem(id = BSONObjectID.generate().some)
     wRes <- mongoService.addItem(user, groupId, newBillItem)
     resp = wRes.map(_ => newBillItem)
+  } yield resp
+
+  def updateItem(user: DbUser, groupId: BSONObjectID, dbBillItem: DbBillItem): F[Option[ResponseCode]] = for {
+    wRes <- mongoService.updateItem(user, groupId, dbBillItem)
+    resp = wRes.map(_ => SuccessResponse)
   } yield resp
 }
 

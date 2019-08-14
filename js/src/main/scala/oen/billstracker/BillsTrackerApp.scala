@@ -3,9 +3,8 @@ package oen.billstracker
 import oen.billstracker.modules.{About, Home, Layout}
 import oen.billstracker.services.AppCircuit
 import japgolly.scalajs.react.extra.router._
-import org.scalajs.dom.html
+import org.scalajs.dom.document
 
-import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import japgolly.scalajs.react.CallbackTo
 import oen.billstracker.modules.SignIn
 import oen.billstracker.modules.SignOut
@@ -15,7 +14,6 @@ import oen.billstracker.modules.NewBillsGroup
 import oen.billstracker.shared.Dto.User
 import cats.implicits._
 
-@JSExportTopLevel("BillsTrackerApp")
 object BillsTrackerApp {
 
   sealed abstract class Loc(val name: String)
@@ -29,8 +27,8 @@ object BillsTrackerApp {
   case object SignOutLoc extends NoLayoutLoc("Sign out")
   case class BillsGroupLoc(id: String) extends Loc("Bills group")
 
-  @JSExport
-  def main(target: html.Div): Unit = {
+  def main(args: Array[String]): Unit = {
+    val target = document.getElementById("main")
 
     val emptyUser = User(name = "unknown")
     val meWrapper = AppCircuit.connect(_.me)

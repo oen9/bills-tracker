@@ -39,9 +39,11 @@ lazy val jsSettings = Seq(
     "io.suzaku" %%% "diode-react" % "1.1.5.142"
   ),
   npmDependencies in Compile ++= Seq(
-    "react" -> "16.9.0",
-    "react-dom" -> "16.9.0",
-    "react-datepicker" -> "2.8.0"
+    "react" -> "16.7.0",
+    "react-dom" -> "16.7.0",
+    "react-datepicker" -> "2.8.0",
+    "bootstrap" -> "4.3.1",
+    "jquery" -> "3.4.1"
   ),
   webpackBundlingMode := BundlingMode.LibraryAndApplication(), // LibraryOnly() for faster dev builds
   scalaJSUseMainModuleInitializer := true,
@@ -50,11 +52,19 @@ lazy val jsSettings = Seq(
     val targetRes = "../target/scala-2.12/classes/"
     IO.copyDirectory((resourceDirectory in Compile).value, new File(baseDirectory.value, targetRes))
 
+    val targetBundler = targetRes + "scalajs-bundler/main/"
+
+    // fastopt.js.map
+    val fastOptData = (fastOptJS in Compile).value.data
+    val mapFileName = fastOptData.name + ".map"
+    val fastOptMapFrom = fastOptData.getParentFile / mapFileName
+    val fastOptMapTo = new File(baseDirectory.value, targetBundler + mapFileName)
+    IO.copyFile(fastOptMapFrom, fastOptMapTo)
+
     // webpack
     val webpackFiles = webpack.in(Compile, fastOptJS).value.map(_.data)
-    val targetBoundle = targetRes + "scalajs-bundler/main/"
     webpackFiles.foreach { f =>
-      val targetFile = new File(baseDirectory.value, targetBoundle + f.name)
+      val targetFile = new File(baseDirectory.value, targetBundler + f.name)
       IO.copyFile(f, targetFile)
     }
   }
@@ -94,7 +104,21 @@ lazy val billstrackerJVM = billstracker.jvm
   dockerExposedPorts := Seq(8080),
   dockerBaseImage := "oracle/graalvm-ce:19.1.1",
   (resources in Compile) ++= webpack.in(Compile, fullOptJS).in(billstrackerJS, Compile).value.map(_.data),
-  (unmanagedResourceDirectories in Compile) += (resourceDirectory in(billstrackerJS, Compile)).value
+  (unmanagedResourceDirectories in Compile) += (resourceDirectory in(billstrackerJS, Compile)).value,
+  resourceGenerators in Compile += Def.task {
+    webpack.in(Compile, fullOptJS).in(billstrackerJS, Compile).value
+    val fixedPath = "scalajs-bundler/main/node_modules"
+    val jsPrefix = (target in(billstrackerJS, Compile)).value / ("scala-" + scalaBinaryVersion.value) / fixedPath
+    val dstPrefix = (resourceManaged in Compile).value / fixedPath
+    Seq(
+      "react-datepicker/dist/react-datepicker.min.css"
+    ).map { f =>
+      val src = jsPrefix / f
+      val dst = dstPrefix / f
+      IO.copyFile(src, dst)
+      dst
+    }
+  }.taskValue
 )
 
 disablePlugins(RevolverPlugin)

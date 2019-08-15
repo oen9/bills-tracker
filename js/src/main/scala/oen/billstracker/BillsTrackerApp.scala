@@ -13,6 +13,7 @@ import oen.billstracker.modules.BillsGroup
 import oen.billstracker.modules.NewBillsGroup
 import oen.billstracker.shared.Dto.User
 import cats.implicits._
+import scala.scalajs.js.annotation.JSImport
 
 object BillsTrackerApp {
 
@@ -27,8 +28,15 @@ object BillsTrackerApp {
   case object SignOutLoc extends NoLayoutLoc("Sign out")
   case class BillsGroupLoc(id: String) extends Loc("Bills group")
 
+  import scala.scalajs.js
+  @JSImport("bootstrap", JSImport.Default)
+  @js.native
+  object Bootstrap extends js.Object
+
   def main(args: Array[String]): Unit = {
     val target = document.getElementById("main")
+
+    Bootstrap
 
     val emptyUser = User(name = "unknown")
     val meWrapper = AppCircuit.connect(_.me)

@@ -27,8 +27,6 @@ lazy val sharedSettings = Seq(
   )
 )
 
-lazy val fastOptJSDev = TaskKey[Unit]("fastOptJSDev")
-
 lazy val jsSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.9.7",
@@ -47,27 +45,6 @@ lazy val jsSettings = Seq(
   ),
   webpackBundlingMode := BundlingMode.LibraryAndApplication(), // LibraryOnly() for faster dev builds
   scalaJSUseMainModuleInitializer := true,
-  fastOptJSDev := {
-    // resources
-    val targetRes = "../target/scala-2.12/classes/"
-    IO.copyDirectory((resourceDirectory in Compile).value, new File(baseDirectory.value, targetRes))
-
-    val targetBundler = targetRes + "scalajs-bundler/main/"
-
-    // fastopt.js.map
-    val fastOptData = (fastOptJS in Compile).value.data
-    val mapFileName = fastOptData.name + ".map"
-    val fastOptMapFrom = fastOptData.getParentFile / mapFileName
-    val fastOptMapTo = new File(baseDirectory.value, targetBundler + mapFileName)
-    IO.copyFile(fastOptMapFrom, fastOptMapTo)
-
-    // webpack
-    val webpackFiles = webpack.in(Compile, fastOptJS).value.map(_.data)
-    webpackFiles.foreach { f =>
-      val targetFile = new File(baseDirectory.value, targetBundler + f.name)
-      IO.copyFile(f, targetFile)
-    }
-  }
 )
 
 lazy val jvmSettings = Seq(
@@ -100,25 +77,19 @@ lazy val billstrackerJS = billstracker.js
 
 lazy val billstrackerJVM = billstracker.jvm
   .enablePlugins(DockerPlugin)
-  .enablePlugins(JavaAppPackaging).settings(
-  dockerExposedPorts := Seq(8080),
-  dockerBaseImage := "oracle/graalvm-ce:19.1.1",
-  (resources in Compile) ++= webpack.in(Compile, fullOptJS).in(billstrackerJS, Compile).value.map(_.data),
-  (unmanagedResourceDirectories in Compile) += (resourceDirectory in(billstrackerJS, Compile)).value,
-  resourceGenerators in Compile += Def.task {
-    webpack.in(Compile, fullOptJS).in(billstrackerJS, Compile).value
-    val fixedPath = "scalajs-bundler/main/node_modules"
-    val jsPrefix = (target in(billstrackerJS, Compile)).value / ("scala-" + scalaBinaryVersion.value) / fixedPath
-    val dstPrefix = (resourceManaged in Compile).value / fixedPath
-    Seq(
-      "react-datepicker/dist/react-datepicker.min.css"
-    ).map { f =>
-      val src = jsPrefix / f
-      val dst = dstPrefix / f
-      IO.copyFile(src, dst)
-      dst
-    }
-  }.taskValue
-)
+  .enablePlugins(JavaAppPackaging)
+  .settings(
+    dockerExposedPorts := Seq(8080),
+    dockerBaseImage := "oracle/graalvm-ce:19.1.1",
+    (unmanagedResourceDirectories in Compile) += (resourceDirectory in(billstrackerJS, Compile)).value,
+    mappings.in(Universal) ++= webpack.in(Compile, fullOptJS).in(billstrackerJS, Compile).value.map { f =>
+      f.data -> s"assets/${f.data.getName()}"
+    },
+    mappings.in(Universal) ++= Seq(
+      (target in(billstrackerJS, Compile)).value / ("scala-" + scalaBinaryVersion.value) / "scalajs-bundler" / "main" / "node_modules" / "react-datepicker" / "dist" / "react-datepicker.min.css" -> "assets/react-datepicker.min.css",
+      (target in(billstrackerJS, Compile)).value / ("scala-" + scalaBinaryVersion.value) / "scalajs-bundler" / "main" / "node_modules" / "bootstrap" / "dist" / "css" / "bootstrap.min.css" -> "assets/bootstrap.min.css"
+    ),
+    bashScriptExtraDefines += """addJava "-Dassets=${app_home}/../assets""""
+  )
 
 disablePlugins(RevolverPlugin)

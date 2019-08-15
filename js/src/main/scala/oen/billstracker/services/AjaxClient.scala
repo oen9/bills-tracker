@@ -15,12 +15,13 @@ object AjaxClient {
   val JSON_TYPE = Map("Content-Type" -> "application/json")
   def authHeader(token: String) = "Authorization" -> token
   def authJsonType(token: String) = JSON_TYPE + ("Authorization" -> token)
+  val baseUrl = ""
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def signUp(user: PlainUser) = {
     Ajax.post(
-      url = "/sign-up",
+      url = s"$baseUrl/sign-up",
       data = user.asJson.noSpaces,
       headers = JSON_TYPE
     ).transform(_.responseText, onFailure)
@@ -28,7 +29,7 @@ object AjaxClient {
 
   def signIn(user: PlainUser) = {
     Ajax.post(
-      url = "/sign-in",
+      url = s"$baseUrl/sign-in",
       data = user.asJson.noSpaces,
       headers = JSON_TYPE
     ).transform(decodeAndHandleErrors[AuthToken])
@@ -36,14 +37,14 @@ object AjaxClient {
 
   def getUserData(token: String) = {
     Ajax.get(
-      url = "/user",
+      url = s"$baseUrl/user",
       headers = JSON_TYPE + authHeader(token)
     ).transform(decodeAndHandleErrors[User])
   }
 
   def addNewGroup(token: String, data: AddNewGroup) = {
     Ajax.post(
-      url = "/groups",
+      url = s"$baseUrl/groups",
       data = data.asJson.noSpaces,
       headers = JSON_TYPE + authHeader(token)
     ).transform(decodeAndHandleErrors[BillGroup])
@@ -51,21 +52,21 @@ object AjaxClient {
 
   def deleteItem(token: String, groupId: String, itemId: String) = {
     Ajax.delete(
-      url = s"/groups/$groupId/items/$itemId",
+      url = s"$baseUrl/groups/$groupId/items/$itemId",
       headers = JSON_TYPE + authHeader(token)
     ).transform(_.responseText, onFailure)
   }
 
   def addItem(token: String, groupId: String) = {
     Ajax.post(
-      url = s"/groups/$groupId/items",
+      url = s"$baseUrl/groups/$groupId/items",
       headers = JSON_TYPE + authHeader(token)
     ).transform(decodeAndHandleErrors[BillItem])
   }
 
   def updateItem(token: String, groupId: String, itemId: String, data: BillItem) = {
     Ajax.put(
-      url = s"/groups/$groupId/items/$itemId",
+      url = s"$baseUrl/groups/$groupId/items/$itemId",
       data = data.asJson.noSpaces,
       headers = JSON_TYPE + authHeader(token)
     ).transform(_.responseText, onFailure)
@@ -73,7 +74,7 @@ object AjaxClient {
 
   def updateGroupName(token: String, groupId: String, data: BillGroup) = {
     Ajax.put(
-      url = s"/groups/$groupId",
+      url = s"$baseUrl/groups/$groupId",
       data = data.asJson.noSpaces,
       headers = JSON_TYPE + authHeader(token)
     ).transform(_.responseText, onFailure)
@@ -81,7 +82,7 @@ object AjaxClient {
 
   def deleteGroup(token: String, groupId: String) = {
     Ajax.delete(
-      url = s"/groups/$groupId",
+      url = s"$baseUrl/groups/$groupId",
       headers = JSON_TYPE + authHeader(token)
     ).transform(_.responseText, onFailure)
   }

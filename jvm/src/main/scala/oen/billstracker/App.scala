@@ -17,8 +17,16 @@ import oen.billstracker.services.MongoService
 import org.http4s.server.Router
 import oen.billstracker.endpoints.GroupsEndpoints
 import oen.billstracker.services.GroupsService
+import org.http4s.server.middleware.CORSConfig
+import scala.concurrent.duration._
+import org.http4s.server.middleware.CORS
 
 object App extends IOApp {
+
+  val originConfig = CORSConfig(
+    anyOrigin = true,
+    allowCredentials = false,
+    maxAge = 1.day.toSeconds)
 
   override def run(args: List[String]): IO[ExitCode] = {
     (for {
@@ -46,7 +54,7 @@ object App extends IOApp {
         authService <- AuthService[F](conf.secret, mongoService)
         groupsService = GroupsService[F](mongoService)
 
-        staticEndpoints = StaticEndpoints[F](blockingEc)
+        staticEndpoints = StaticEndpoints[F](conf.assets, blockingEc)
         authEndpoints = AuthEndpoints[F](authService)
         welcomeEndpoints = WelcomeEndpoints[F](authEndpoints.authMiddleware)
         userEndpoints = UserEndpoints[F](authEndpoints.authMiddleware)
@@ -63,7 +71,7 @@ object App extends IOApp {
 
         exitCode <- BlazeServerBuilder[F]
           .bindHttp(conf.http.port, conf.http.host)
-          .withHttpApp(httpApp)
+          .withHttpApp(CORS(httpApp))
           .serve
           .compile
           .drain

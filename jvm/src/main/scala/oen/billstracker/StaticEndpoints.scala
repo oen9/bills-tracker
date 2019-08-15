@@ -6,10 +6,13 @@ import org.http4s.{HttpRoutes, Request, StaticFile}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
-class StaticEndpoints[F[_] : ContextShift : Effect](blockingEc: ExecutionContextExecutorService) extends Http4sDsl[F] {
+class StaticEndpoints[F[_] : ContextShift : Effect](assetsPath: String, blockingEc: ExecutionContextExecutorService) extends Http4sDsl[F] {
 
   private[this] def static(file: String, blockingEc: ExecutionContext, request: Request[F]) =
     StaticFile.fromResource("/" + file, blockingEc, Some(request)).getOrElseF(NotFound())
+
+  private[this] def staticAssets(file: String, blockingEc: ExecutionContext, request: Request[F]) =
+    StaticFile.fromString(s"$assetsPath/$file", blockingEc, Some(request)).getOrElseF(NotFound())
 
   def endpoints(): HttpRoutes[F] = HttpRoutes.of[F] {
     case request@GET -> Root =>
@@ -18,17 +21,17 @@ class StaticEndpoints[F[_] : ContextShift : Effect](blockingEc: ExecutionContext
     case request@GET -> Root / path if List(".js", ".css", ".map", ".html", ".ico").exists(path.endsWith) =>
       static(path, blockingEc, request)
 
-    case request@GET -> "scalajs-bundler" /: path =>
-      val fullPath = "scalajs-bundler/" + path.toList.mkString("/")
-      static(fullPath, blockingEc, request)
-
     case request@GET -> "front-res" /: path =>
       val fullPath = "front-res/" + path.toList.mkString("/")
       static(fullPath, blockingEc, request)
+
+    case request@GET -> "assets" /: path =>
+      val fullPath = path.toList.mkString("/")
+      staticAssets(fullPath, blockingEc, request)
   }
 }
 
 object StaticEndpoints {
-  def apply[F[_] : ContextShift : Effect](blockingEc: ExecutionContextExecutorService): StaticEndpoints[F] =
-    new StaticEndpoints[F](blockingEc)
+  def apply[F[_] : ContextShift : Effect](assetsPath: String, blockingEc: ExecutionContextExecutorService): StaticEndpoints[F] =
+    new StaticEndpoints[F](assetsPath, blockingEc)
 }

@@ -9,7 +9,7 @@ class AppConfigException(failures: ConfigReaderFailures) extends RuntimeExceptio
 
 case class Http(port: Int, host: String)
 case class Mongo(uri: String)
-case class AppConfig(http: Http, secret: String, mongo: Mongo)
+case class AppConfig(http: Http, secret: String, mongo: Mongo, assets: String)
 
 object AppConfig {
   def read[F[_] : Sync](): F[AppConfig] = {

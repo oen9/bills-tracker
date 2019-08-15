@@ -24,7 +24,8 @@ lazy val sharedSettings = Seq(
     "-feature",
     "-Ypartial-unification",
     "-language:higherKinds"
-  )
+  ),
+  localUrl := ("0.0.0.0", 12345)
 )
 
 lazy val jsSettings = Seq(

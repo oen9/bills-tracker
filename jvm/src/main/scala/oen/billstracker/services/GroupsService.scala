@@ -8,6 +8,7 @@ import oen.billstracker.shared.Dto.SuccessResponse
 import akka.io.dns.internal.ResponseCode
 import akka.io.dns.internal.ResponseCode
 import oen.billstracker.shared.Dto.ResponseCode
+import java.{util => ju}
 
 trait GroupsService[F[_]] {
   def addGroup(user: DbUser, newGroup: DbBillGroup): F[Option[DbBillGroup]]
@@ -34,7 +35,7 @@ class GroupsServiceImpl[F[_] : Effect](mongoService: MongoService[F]) extends Gr
 
   def addItem(user: DbUser, groupId: BSONObjectID): F[Option[DbBillItem]] = for {
     _ <- Effect[F].unit
-    newBillItem = DbBillItem(id = BSONObjectID.generate().some)
+    newBillItem = DbBillItem(id = BSONObjectID.generate().some, date = new ju.Date)
     wRes <- mongoService.addItem(user, groupId, newBillItem)
     resp = wRes.map(_ => newBillItem)
   } yield resp

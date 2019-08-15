@@ -19,7 +19,7 @@ object Layout {
   )
 
   def nav(props: Props) =
-    <.div(^.cls := "navbar navbar-expand-md sticky-top navbar-dark bg-dark",
+    <.div(^.cls := "navbar navbar-expand-md navbar-dark bg-dark",
       props.router.link(HomeLoc)(
         ^.cls := "navbar-brand",
         <.img(^.src := "front-res/img/logo-mini.png"),

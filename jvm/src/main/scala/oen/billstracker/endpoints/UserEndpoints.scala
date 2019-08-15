@@ -8,7 +8,7 @@ import cats.effect._
 import org.http4s._
 import org.http4s.server._
 import org.http4s.circe._
-import oen.billstracker.shared.Dto.User
+import oen.billstracker.shared.Dto._
 import io.circe.syntax._
 import io.circe.generic.auto._
 import oen.billstracker.model.StorageData._

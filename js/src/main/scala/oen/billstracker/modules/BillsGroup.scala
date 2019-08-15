@@ -10,6 +10,9 @@ import com.softwaremill.quicklens._
 import io.scalaland.chimney.dsl._
 import scala.util.Try
 import oen.billstracker.services.WebData._
+import oen.billstracker.components.DatePicker
+import scala.scalajs.js
+import java.{util => ju}
 
 object BillsGroup {
   case class Props(proxy: ModelProxy[(Option[Me], Option[BillGroup])])
@@ -19,7 +22,7 @@ object BillsGroup {
     groupToDelete: Option[BillGroup] = None,
     groupNameToEdit: Option[String] = None
   )
-  case class EditedBillItem(id: Option[String], description: String, value: String)
+  case class EditedBillItem(id: Option[String], description: String, value: String, date: js.Date = new js.Date())
 
   class Backend($: BackendScope[Props, State]) {
     def pickToDelete(toDelete: BillItem)(e: ReactEvent) = {
@@ -51,6 +54,7 @@ object BillsGroup {
       _ <- e.preventDefaultCB
       _ <- $.modState(_.copy(toEdit = toEdit.into[EditedBillItem]
         .withFieldComputed(_.value, _.value.toString())
+        .withFieldComputed(_.date, item => new js.Date(item.date.getTime().toDouble))
         .transform
         .some
       ))
@@ -62,6 +66,7 @@ object BillsGroup {
       p <- $.props
       maybeBillItem = s.toEdit.map(_.into[BillItem]
           .withFieldComputed(_.value, edited => parseBigDecimal(edited.value))
+          .withFieldComputed(_.date, edited => new ju.Date(edited.date.getTime().toLong))
           .transform
         )
       updateBillItemAction = for {
@@ -94,6 +99,10 @@ object BillsGroup {
         _ => Callback.empty,
         _ => $.modState(_.modify(_.toEdit.each.value).setTo(newValue))
       )
+    } yield ()
+
+    def updateDate(newDate: js.Date): Callback = for {
+        _ <- $.modState(_.modify(_.toEdit.each.date).setTo(newDate))
     } yield ()
 
     def parseBigDecimal(s: String): BigDecimal = {
@@ -227,7 +236,7 @@ object BillsGroup {
       def itemList(items: IndexedSeq[BillItem]) = items.map { item =>
         <.li(^.cls := "list-group-item", ^.key := item.id.getOrElse(item.description),
           <.div(^.cls := "row align-items-center",
-            <.div(^.cls := "col-sm col-md-5 col-xl-7",
+            <.div(^.cls := "col-sm col-md-4 col-xl-6",
               toEdit.filter(_.id == item.id).fold(item.description.toString(): VdomNode)(e =>
                 <.input(^.tpe := "text", ^.cls := "form-control", ^.value := e.description, ^.onChange ==> updateDescription)
               )
@@ -235,6 +244,11 @@ object BillsGroup {
             <.div(^.cls := "col-sm col-md col-xl",
               toEdit.filter(_.id == item.id).fold(item.value.toString(): VdomNode)(e =>
                 <.input(^.tpe := "text", ^.cls := "form-control", ^.value := e.value.toString, ^.onChange ==> updateValue)
+              )
+            ),
+            <.div(^.cls := "col-sm col-md col-xl",
+              toEdit.filter(_.id == item.id).fold(new js.Date(item.date.getTime().toDouble).toLocaleDateString() : VdomNode)(e =>
+                DatePicker(selected = e.date, onChange =  updateDate _)(^.cls := "form-control")
               )
             ),
             <.div(^.cls := "col-sm col-md col-xl text-right",

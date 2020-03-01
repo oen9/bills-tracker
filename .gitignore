@@ -3,6 +3,7 @@
 
 .metals/
 .bloop/
+project/metals.sbt
 .idea/
 target/
 node_modules/

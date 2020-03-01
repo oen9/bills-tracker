@@ -1,11 +1,12 @@
 val Http4sVersion = "0.20.0"
 val LogbackVersion = "1.2.3"
+scalaVersion := "2.12.10"
 
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 lazy val sharedSettings = Seq(
   organization := "oen",
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.12.10",
   version := "0.1",
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.6.8",
@@ -81,7 +82,7 @@ lazy val billstrackerJVM = billstracker.jvm
   .enablePlugins(JavaAppPackaging)
   .settings(
     dockerExposedPorts := Seq(8080),
-    dockerBaseImage := "oracle/graalvm-ce:19.1.1",
+    dockerBaseImage := "oracle/graalvm-ce:19.2.0",
     (unmanagedResourceDirectories in Compile) += (resourceDirectory in(billstrackerJS, Compile)).value,
     mappings.in(Universal) ++= webpack.in(Compile, fullOptJS).in(billstrackerJS, Compile).value.map { f =>
       f.data -> s"assets/${f.data.getName()}"

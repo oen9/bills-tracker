@@ -36,7 +36,7 @@ object MongoService {
 
     def connectToDb(driver: MongoDriver): F[DefaultDB] = for {
       uri <- Effect[F].fromTry(MongoConnection.parseURI(mongoUri))
-      con <- Effect[F].fromTry(driver.connection(uri, true))
+      con <- Effect[F].fromTry(driver.connection(uri, false))
       dn <- Effect[F].fromOption(uri.db, new Exception("cannot get db from uri"))
       db <- con.database(dn, FailoverStrategy(retries = 20)).toF // (retries = 20) == 32 seconds
     } yield db
